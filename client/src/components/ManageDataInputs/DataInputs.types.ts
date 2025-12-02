@@ -11,4 +11,6 @@ export interface DataInputAppConfig {
     mode: DataInputMode;
     cron_expression: string;
     selected_output_location: string;
+    /** Array paths to explode into separate events (e.g., ["$.products", "$.users"]) */
+    separate_array_paths?: string[];
 }

@@ -1,18 +1,19 @@
 import { useMemo } from 'react';
-import JSONTree, { type JSONElement } from '@splunk/react-ui/JSONTree';
 import Message from '@splunk/react-ui/Message';
 import Heading from '@splunk/react-ui/Heading';
+import ClickableJSONTree from './ClickableJSONTree';
 
 interface JSONViewerProps {
     initialData: string;
+    onPathClick?: (path: string) => void;
 }
 
-export default function JSONViewer({ initialData }: JSONViewerProps) {
+export default function JSONViewer({ initialData, onPathClick }: JSONViewerProps) {
     const { parsedJSON, isValidJSON } = useMemo(() => {
         if (!initialData) return { parsedJSON: null, isValidJSON: true };
         try {
             const parsed = JSON.parse(initialData);
-            return { parsedJSON: parsed as JSONElement, isValidJSON: true };
+            return { parsedJSON: parsed, isValidJSON: true };
         } catch {
             return { parsedJSON: null, isValidJSON: false };
         }
@@ -20,16 +21,20 @@ export default function JSONViewer({ initialData }: JSONViewerProps) {
 
     const JSONTreeMemo = useMemo(() => {
         return parsedJSON ? (
-            <div><JSONTree json={parsedJSON} defaultExpanded /></div>
+            <ClickableJSONTree data={parsedJSON} onPathClick={onPathClick} />
         ) : (
-            <Message type="info">complete fetch data to see preview</Message>
+            <Message type="info">Fetch data to see preview. Click on any key to add it to exclusions.</Message>
         );
-    }, [parsedJSON]);
+    }, [parsedJSON, onPathClick]);
 
     return (
         <div>
             <Heading level={2}>Preview</Heading>
-            <br />
+            {onPathClick && (
+                <p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+                    Click on any key to add it to the exclude list
+                </p>
+            )}
             {isValidJSON ? (
                 JSONTreeMemo
             ) : (

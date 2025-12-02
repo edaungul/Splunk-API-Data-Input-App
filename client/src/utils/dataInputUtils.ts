@@ -17,6 +17,12 @@ export async function addNewDataInputToKVStore(data: DataInputAppConfig) {
   return addNewRecordToKVStore(data, "api_input_connect_config");
 }
 
+export async function addNewDataInputToIndex(data: DataInputAppConfig) {
+  // Index inputs are stored in the same config collection as KVStore inputs
+  // The backend distinguishes them by input_type field
+  return addNewRecordToKVStore(data, "api_input_connect_config");
+}
+
 export async function deleteConfigItemFromKVStore(key: string) {
   return deleteItemFromKVStore("api_input_connect_config", key);
 }

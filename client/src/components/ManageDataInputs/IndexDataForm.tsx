@@ -6,20 +6,17 @@ import Select from '@splunk/react-ui/Select';
 import Button from '@splunk/react-ui/Button';
 import WaitSpinner from '@splunk/react-ui/WaitSpinner';
 import FormRows from '@splunk/react-ui/FormRows';
-import { createNewKVStoreCollection, getAllCollectionNames, type KVStoreCollection } from '../../utils/splunk';
-import NewKVStoreForm from '../DataInputs/KVStore/NewKVStoreForm';
-import { generateSelectedOutputString } from '../../utils/dataInputUtils';
-import RadioList from '@splunk/react-ui/RadioList';
+import { getAllIndexNames } from '../../utils/splunk';
+import CreateNewIndex from '../DataInputs/Index/CreateNewIndex';
 import TrashCanCross from '@splunk/react-icons/TrashCanCross';
 import ArrayFieldSelector from '../Json/ArrayFieldSelector';
 import EventPreviewModal from '../Json/EventPreviewModal';
 
 
-interface KVStoreDataFormProps {
+interface IndexDataFormProps {
     dataInputAppConfig?: DataInputAppConfig;
     setDataInputAppConfig?: React.Dispatch<React.SetStateAction<DataInputAppConfig>>;
     fetchDataPreview: (url: string, jsonPaths: string[]) => Promise<void>;
-    fieldsForKvStoreCreation: string[];
     loading: boolean;
     handleSave: (formData: DataInputAppConfig, clearInputs?: () => void) => void;
     setError: (message: string) => void;
@@ -29,20 +26,20 @@ interface KVStoreDataFormProps {
     rawData?: unknown;
 }
 
-const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
+const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
     const config: Partial<DataInputAppConfig> = props.dataInputAppConfig || {};
     const modalToggle = React.useRef<HTMLButtonElement | null>(null);
     const previewModalToggle = React.useRef<HTMLButtonElement | null>(null);
-    const [collectionNames, setCollectionNames] = useState<KVStoreCollection[]>([]);
-    const [showCreateKVModal, setShowCreateKVModal] = useState(false);
+    const [indexNames, setIndexNames] = useState<string[]>([]);
+    const [showCreateIndexModal, setShowCreateIndexModal] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     const [name, setInputName] = useState(config.name ?? '');
-    const [dataInputType, setDataInputType] = useState<string>(config.input_type ?? 'kvstore');
+    const [dataInputType] = useState<string>('index');
     const [url, setUrl] = useState(config.url ?? "https://dummyjson.com/products");
     const [http_headers, setHttpHeaders] = useState<string[]>(config.http_headers ?? [""]);
     const [cronExpression, setCronExpression] = useState(config.cron_expression ?? '0 * * * *');
-    const [selected_output_location, setSelectedCollection] = useState<string>(config.selected_output_location ?? '');
+    const [selected_output_location, setSelectedIndex] = useState<string>(config.selected_output_location ?? '');
     const [mode, setMode] = useState<DataInputMode>(config.mode ?? 'overwrite');
     const [separateArrayPaths, setSeparateArrayPaths] = useState<string[]>(config.separate_array_paths ?? []);
 
@@ -67,8 +64,8 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
     );
 
     React.useEffect(() => {
-        getAllCollectionNames().then(result => {
-            setCollectionNames(result);
+        getAllIndexNames().then(result => {
+            setIndexNames(result);
         });
     }, []);
 
@@ -199,16 +196,22 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
     // Function to clear all input fields
     const clearInputs = () => {
         setInputName('');
-        setDataInputType('kvstore');
         setUrl('https://dummyjson.com/products');
         setCronExpression('0 * * * *');
-        setSelectedCollection('');
+        setSelectedIndex('');
         setMode('overwrite');
         setJsonPathValues([""]);
         setHttpHeaders([""]);
         setSeparateArrayPaths([]);
         props.onJSONPathsChange([]);
         props.setJsonPreview && props.setJsonPreview('')
+    };
+
+    const handleOnCreateIndex = async (createdIndexName: string) => {
+        // update list of indexes
+        const names = await getAllIndexNames();
+        setIndexNames(names);
+        setSelectedIndex(createdIndexName);
     };
 
     return (
@@ -297,54 +300,30 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
                 modalToggle={previewModalToggle}
             />
 
-            <ControlGroup label="Select KV Store Collection:" required>
+            <ControlGroup label="Select Index:" required>
                 <Select
                     value={selected_output_location}
-                    onChange={(_, { value }) => {updateConfigField('selected_output_location', String(value)); setSelectedCollection(String(value))}}
+                    onChange={(_, { value }) => {updateConfigField('selected_output_location', String(value)); setSelectedIndex(String(value))}}
                     filter
-                    placeholder="Filter collections..."
+                    placeholder="Select an index..."
                     style={{ flex: 1, minWidth: '400px' }}
                 >
-                    {collectionNames.map((collection) => (
-                        <Select.Option value={`${collection.app}/${collection.name}`} key={`${collection.name} (${collection.app})`} label={`${collection.name} (${collection.app})`} />
+                    {indexNames.map((indexName) => (
+                        <Select.Option value={indexName} key={indexName} label={indexName} />
                     ))}
                 </Select>
-                <Button appearance="secondary" onClick={() => setShowCreateKVModal(true)} elementRef={modalToggle}>
-                    Create New KV Store
+                <Button appearance="secondary" onClick={() => setShowCreateIndexModal(true)} elementRef={modalToggle}>
+                    Create New Index
                 </Button>
             </ControlGroup>
-            <NewKVStoreForm
-                open={showCreateKVModal}
-                onClose={() => setShowCreateKVModal(false)}
-                initialFields={props.fieldsForKvStoreCreation}
-                onCreate={async (name, app, fields) => {
-                    try {
-                        await createNewKVStoreCollection(name, app, fields);
-                        // Refresh collections and select the new one
-                        const result = await getAllCollectionNames();
-                        setCollectionNames(result);
-                        setSelectedCollection(generateSelectedOutputString(app, name));
-                        setShowCreateKVModal(false);
-                    }
-                    catch (err) {
-                        props.setError(`Failed to create KV Store collection: ${err instanceof Error ? err.message : 'Unknown error'}`);
-                        return;
-                    }
-
-                }}
-                modalToggle={modalToggle} />
-            <ControlGroup label="Mode:" tooltip="How would you like to manage the existing data in the collection?" required>
-
-                <RadioList value={mode} onChange={(_, { value }) => {
-                    setMode(value as DataInputMode);
-                    updateConfigField('mode', value as DataInputMode);
-                }}>
-                    <RadioList.Option value={"overwrite"}>overwrite</RadioList.Option>
-                </RadioList>
-
-            </ControlGroup>
+            <CreateNewIndex
+                open={showCreateIndexModal}
+                onClose={() => setShowCreateIndexModal(false)}
+                onCreate={handleOnCreateIndex}
+                modalToggle={modalToggle}
+            />
             <br />
-            {/* assume if dataInputAppConfig is passed in save logic is being handled else where (edit mode) */}
+            {/* assume if dataInputAppConfig is passed in save logic is being handled elsewhere (edit mode) */}
             {!props.dataInputAppConfig && (
                 <Button
                     appearance="primary"
@@ -372,4 +351,4 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
     );
 };
 
-export default KVStoreDataForm
+export default IndexDataForm;

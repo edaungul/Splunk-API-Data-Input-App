@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import ColumnLayout from '@splunk/react-ui/ColumnLayout';
 import NewKVStoreDataInputForm from '../components/DataInputs/KVStore/NewDataInputForm';
 import JSONViewer from '../components/Json/JsonViewer';
@@ -7,13 +7,22 @@ import MessageBar from '@splunk/react-ui/MessageBar';
 // @ts-ignore
 import { createDOMID } from '@splunk/ui-utils/id';
 import TabBar from '@splunk/react-ui/TabBar';
-import { NewIndexInput } from '../components/DataInputs/Index/NewIndexInput';
+import NewIndexDataInputForm from '../components/DataInputs/Index/NewIndexDataInputForm';
 
 export default function NewDataInput() {
   const [jsonData, setJsonData] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [activeTabId, setActiveTabId] = useState('kvstore');
   const headingId = createDOMID('data-input-success');
+
+  // Ref to pass path additions to form components
+  const addExcludePathRef = useRef<((path: string) => void) | null>(null);
+
+  const handlePathClick = useCallback((path: string) => {
+    if (addExcludePathRef.current) {
+      addExcludePathRef.current(path);
+    }
+  }, []);
 
 
   const handleTabChange = useCallback(
@@ -52,14 +61,21 @@ export default function NewDataInput() {
                 setJsonData(data);
               }}
               onSuccess={() => setSuccessMessage('Successfully added data input to KV Store.')}
+              onAddExcludePathRef={(fn) => { addExcludePathRef.current = fn; }}
             />
           )}
           {activeTabId === 'index' && (
-            <NewIndexInput />
+            <NewIndexDataInputForm
+              onDataFetched={(data: string) => {
+                setJsonData(data);
+              }}
+              onSuccess={() => setSuccessMessage('Successfully added data input for Index.')}
+              onAddExcludePathRef={(fn) => { addExcludePathRef.current = fn; }}
+            />
           )}
         </ColumnLayout.Column>
         <ColumnLayout.Column span={6}>
-          <JSONViewer initialData={jsonData} />
+          <JSONViewer initialData={jsonData} onPathClick={handlePathClick} />
         </ColumnLayout.Column>
       </ColumnLayout.Row>
     </ColumnLayout>

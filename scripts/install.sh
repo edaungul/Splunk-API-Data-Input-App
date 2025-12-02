@@ -1,14 +1,18 @@
 #!/bin/bash
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Navigate to the client directory
-cd client
+cd "$PROJECT_ROOT/client" || exit 1
 
 # Install npm dependencies
-npm install
+echo "Installing npm dependencies..."
+npm install || exit 1
 
-# Return to the project root directory
-cd ..
+# Build the client
+echo "Building client..."
+npm run build || exit 1
 
-# Reload the Splunk app to apply changes
-./scripts/reload-app.sh
+echo "Build complete. Output: $PROJECT_ROOT/api_input_connect/appserver/static/client"

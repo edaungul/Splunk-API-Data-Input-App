@@ -140,8 +140,104 @@ def empty_kvstore(app, collection):
     return True
 
 
+def write_to_index_via_hec(index_name, data):
+    """
+    Write data to a Splunk index using the HTTP Event Collector (HEC).
+    Uses the receivers/simple endpoint which accepts raw data via session key auth.
+    """
+    logger.info(f"Writing to index: {index_name}")
+    url = f"https://localhost:{SPLUNKD_PORT}/services/receivers/simple?index={index_name}&sourcetype=_json"
+
+    try:
+        if isinstance(data, list):
+            # Send each item as a separate event
+            for item in data:
+                event_data = json.dumps(item)
+                result = call_splunk_api('post', url, session_key=SESSION_KEY, data=event_data)
+                if result is None:
+                    logger.warning(f"Failed to write event to index {index_name}")
+        else:
+            # Single event
+            event_data = json.dumps(data)
+            result = call_splunk_api('post', url, session_key=SESSION_KEY, data=event_data)
+            if result is None:
+                logger.warning(f"Failed to write event to index {index_name}")
+
+        logger.info(f"Successfully wrote data to index: {index_name}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to write to index {index_name}: {e}")
+        return False
+
+
 def get_kvstore_details_from_config(config):
     return config.get('selected_output_location', "/").split('/')
+
+
+def get_value_at_path(data, path):
+    """
+    Get value at a JSONPath from an object.
+    Supports simple paths like $.products or $.data.items
+    """
+    if path == '$':
+        return data
+
+    # Remove leading $. if present
+    path = path.lstrip('$').lstrip('.')
+    if not path:
+        return data
+
+    parts = path.split('.')
+    current = data
+
+    for part in parts:
+        if current is None:
+            return None
+        if not isinstance(current, dict):
+            return None
+        current = current.get(part)
+
+    return current
+
+
+def separate_arrays_into_events(data, separate_array_paths):
+    """
+    Generate separate events from data based on selected array paths.
+    Each array item becomes its own event with metadata about its source.
+    """
+    if not separate_array_paths:
+        # No separation configured, return as single item list
+        return [data] if not isinstance(data, list) else data
+
+    events = []
+
+    for array_path in separate_array_paths:
+        array_data = get_value_at_path(data, array_path)
+        if isinstance(array_data, list):
+            # Get the field name from the path (e.g., "products" from "$.products")
+            field_name = array_path.split('.')[-1] if '.' in array_path else array_path.lstrip('$')
+
+            for item in array_data:
+                if isinstance(item, dict):
+                    event = {
+                        '_source_array': field_name,
+                        '_array_path': array_path,
+                        **item
+                    }
+                else:
+                    event = {
+                        '_source_array': field_name,
+                        '_array_path': array_path,
+                        'value': item
+                    }
+                events.append(event)
+
+    # If no events were generated from arrays, return original data
+    if not events:
+        return [data] if not isinstance(data, list) else data
+
+    logger.info(f"Separated {len(events)} events from {len(separate_array_paths)} array path(s)")
+    return events
 
 
 def main():
@@ -162,12 +258,28 @@ def main():
                 continue
             if input_type == 'kvstore':
                 api_data = get_api_data(item)
+                if api_data is None:
+                    logger.error(f"Failed to fetch API data for kvstore input: {item.get('name')}")
+                    continue
+                # Apply array separation if configured
+                separate_paths = item.get('separate_array_paths', [])
+                if separate_paths:
+                    api_data = separate_arrays_into_events(api_data, separate_paths)
                 app, collection = get_kvstore_details_from_config(item)
                 if item.get('mode') == 'overwrite':
                     empty_kvstore(app, collection)
                 write_to_kvstore(app, collection, api_data)
             elif input_type == 'index':
-                logger.info('debug: index')
+                api_data = get_api_data(item)
+                if api_data is None:
+                    logger.error(f"Failed to fetch API data for index input: {item.get('name')}")
+                    continue
+                # Apply array separation if configured
+                separate_paths = item.get('separate_array_paths', [])
+                if separate_paths:
+                    api_data = separate_arrays_into_events(api_data, separate_paths)
+                index_name = output_name  # For index, selected_output_location is just the index name
+                write_to_index_via_hec(index_name, api_data)
     except Exception as e:
         logger.error(f"ERROR: {e}")
 

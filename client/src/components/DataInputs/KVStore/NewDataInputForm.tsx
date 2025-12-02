@@ -14,9 +14,10 @@ interface NewKVStoreDataInputFormProps {
     setDataInputAppConfig?: React.Dispatch<React.SetStateAction<DataInputAppConfig>>;
   onDataFetched?: (data: string) => void;
   onSuccess?: () => void;
+  onAddExcludePathRef?: (fn: (path: string) => void) => void;
 }
 
-const NewKVStoreDataInputForm: React.FC<NewKVStoreDataInputFormProps> = ({ dataInputAppConfig, setDataInputAppConfig, onDataFetched, onSuccess }) => {
+const NewKVStoreDataInputForm: React.FC<NewKVStoreDataInputFormProps> = ({ dataInputAppConfig, setDataInputAppConfig, onDataFetched, onSuccess, onAddExcludePathRef }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -90,7 +91,7 @@ const NewKVStoreDataInputForm: React.FC<NewKVStoreDataInputFormProps> = ({ dataI
           {error}
         </Message>
       )}
-      <KVStoreDataForm dataInputAppConfig={dataInputAppConfig} setDataInputAppConfig={setDataInputAppConfig} fetchDataPreview={fetchDataPreview} setJsonPreview={onDataFetched} fieldsForKvStoreCreation={initialFields} loading={loading} handleSave={handleSaveDataInput} setError={setError} onJSONPathsChange={onJSONPathsChange} />
+      <KVStoreDataForm dataInputAppConfig={dataInputAppConfig} setDataInputAppConfig={setDataInputAppConfig} fetchDataPreview={fetchDataPreview} setJsonPreview={onDataFetched} fieldsForKvStoreCreation={initialFields} loading={loading} handleSave={handleSaveDataInput} setError={setError} onJSONPathsChange={onJSONPathsChange} onAddExcludePathRef={onAddExcludePathRef} rawData={rawData} />
     </>
   );
 };

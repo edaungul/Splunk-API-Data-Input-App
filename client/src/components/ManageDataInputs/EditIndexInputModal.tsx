@@ -4,23 +4,22 @@ import type { DataInputAppConfig } from './DataInputs.types';
 import Modal from '@splunk/react-ui/Modal';
 import Button from '@splunk/react-ui/Button';
 import Message from '@splunk/react-ui/Message';
-import EditKVStorePage from './EditKVStorePage';
+import EditIndexPage from './EditIndexPage';
 
-interface EditKVStoreInputModalProps {
+interface EditIndexInputModalProps {
     id?: string;
     open: boolean;
     modalToggle: React.RefObject<HTMLButtonElement | null>;
     onClose: () => void;
     onSuccess?: () => void;
-
 }
 
-const EditKVStoreInputModal: React.FC<EditKVStoreInputModalProps> = ({ id, open, modalToggle, onClose, onSuccess }) => {
+const EditIndexInputModal: React.FC<EditIndexInputModalProps> = ({ id, open, modalToggle, onClose, onSuccess }) => {
     const [data, setData] = useState<DataInputAppConfig>();
     const [error, setError] = useState<string | null>(null);
+
     useEffect(() => {
         async function fetchData() {
-
             try {
                 const result = await getDataInputsConfigById(id || '');
                 setError(null);
@@ -29,8 +28,9 @@ const EditKVStoreInputModal: React.FC<EditKVStoreInputModalProps> = ({ id, open,
                 setError('Failed to fetch config');
             }
         }
+
         if (!id) {
-            setError('No ID provided for EditKVStoreInputModal');
+            setError('No ID provided for EditIndexInputModal');
             return;
         }
 
@@ -38,7 +38,6 @@ const EditKVStoreInputModal: React.FC<EditKVStoreInputModalProps> = ({ id, open,
             fetchData();
         }
     }, [id, open]);
-
 
     const handleSave = async () => {
         if (data) {
@@ -52,7 +51,8 @@ const EditKVStoreInputModal: React.FC<EditKVStoreInputModalProps> = ({ id, open,
                 setError('Failed to update config');
             }
         }
-    }
+    };
+
     return (
         <Modal
             returnFocus={modalToggle}
@@ -60,13 +60,13 @@ const EditKVStoreInputModal: React.FC<EditKVStoreInputModalProps> = ({ id, open,
             open={open}
             style={{ width: '90vw', height: '90vh' }}
         >
-            <Modal.Header title="Edit KV Store Input" />
+            <Modal.Header title="Edit Index Input" />
             <Modal.Body style={{ height: '100%' }}>
                 {error ? (
                     <Message type="error">{error}</Message>
-                ) : data ? (
-                    <EditKVStorePage dataInputAppConfig={data} setDataInputAppConfig={setData as React.Dispatch<React.SetStateAction<DataInputAppConfig>>} onSuccess={onClose} />
-                ) : null}
+                ) : (
+                    <EditIndexPage dataInputAppConfig={data!} setDataInputAppConfig={setData as React.Dispatch<React.SetStateAction<DataInputAppConfig>>} onSuccess={onClose} />
+                )}
             </Modal.Body>
             <Modal.Footer>
                 <Button appearance="primary" onClick={handleSave} label="Save" />
@@ -76,4 +76,4 @@ const EditKVStoreInputModal: React.FC<EditKVStoreInputModalProps> = ({ id, open,
     );
 };
 
-export default EditKVStoreInputModal;
+export default EditIndexInputModal;

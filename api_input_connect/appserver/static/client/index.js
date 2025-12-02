@@ -26116,7 +26116,7 @@ function requireJsonpath() {
 }
 var jsonpathExports = requireJsonpath();
 const jp = /* @__PURE__ */ getDefaultExportFromCjs(jsonpathExports);
-var JSONTree$1 = { exports: {} };
+var JSONTree = { exports: {} };
 var _trimmedEndIndex;
 var hasRequired_trimmedEndIndex;
 function require_trimmedEndIndex() {
@@ -26377,7 +26377,7 @@ function requireRepeat() {
   repeat_1 = repeat;
   return repeat_1;
 }
-var Tooltip$1 = { exports: {} };
+var Tooltip$2 = { exports: {} };
 var now_1;
 var hasRequiredNow;
 function requireNow() {
@@ -32592,7 +32592,7 @@ function requireUseControlled() {
 }
 var hasRequiredTooltip;
 function requireTooltip() {
-  if (hasRequiredTooltip) return Tooltip$1.exports;
+  if (hasRequiredTooltip) return Tooltip$2.exports;
   hasRequiredTooltip = 1;
   (() => {
     var e2 = {};
@@ -33095,13 +33095,13 @@ function requireTooltip() {
     X2.possibleOpenReasons = U2;
     X2.possibleCloseReasons = $2;
     const Y2 = X2;
-    Tooltip$1.exports = n2;
+    Tooltip$2.exports = n2;
   })();
-  return Tooltip$1.exports;
+  return Tooltip$2.exports;
 }
 var hasRequiredJSONTree;
 function requireJSONTree() {
-  if (hasRequiredJSONTree) return JSONTree$1.exports;
+  if (hasRequiredJSONTree) return JSONTree.exports;
   hasRequiredJSONTree = 1;
   (() => {
     var e2 = {
@@ -34360,12 +34360,11 @@ function requireJSONTree() {
       Ee2.propTypes = Ie;
       const je2 = Ee2;
     })();
-    JSONTree$1.exports = t2;
+    JSONTree.exports = t2;
   })();
-  return JSONTree$1.exports;
+  return JSONTree.exports;
 }
-var JSONTreeExports = requireJSONTree();
-const JSONTree = /* @__PURE__ */ getDefaultExportFromCjs(JSONTreeExports);
+requireJSONTree();
 function removeByJsonPaths(obj, paths) {
   if (!paths.length) return obj;
   const clone = structuredClone(obj);
@@ -35094,6 +35093,9 @@ async function createNewIndex(indexName) {
   return await runSplunkApiCall("/services/data/indexes", "POST", requestBody);
 }
 async function addNewDataInputToKVStore(data) {
+  return addNewRecordToKVStore(data, "api_input_connect_config");
+}
+async function addNewDataInputToIndex(data) {
   return addNewRecordToKVStore(data, "api_input_connect_config");
 }
 async function deleteConfigItemFromKVStore(key2) {
@@ -37537,7 +37539,7 @@ function requireLink() {
 }
 var Menu$1 = { exports: {} };
 var NonInteractiveCheckbox = { exports: {} };
-var Switch = { exports: {} };
+var Switch$1 = { exports: {} };
 var CheckBoxCompleted = { exports: {} };
 var hasRequiredCheckBoxCompleted;
 function requireCheckBoxCompleted() {
@@ -37788,7 +37790,7 @@ function requireCheckBoxIndeterminate() {
 }
 var hasRequiredSwitch;
 function requireSwitch() {
-  if (hasRequiredSwitch) return Switch.exports;
+  if (hasRequiredSwitch) return Switch$1.exports;
   hasRequiredSwitch = 1;
   (() => {
     var e2 = {};
@@ -38180,9 +38182,9 @@ function requireSwitch() {
     }
     K2.propTypes = z2;
     const Q2 = K2;
-    Switch.exports = r2;
+    Switch$1.exports = r2;
   })();
-  return Switch.exports;
+  return Switch$1.exports;
 }
 var hasRequiredNonInteractiveCheckbox;
 function requireNonInteractiveCheckbox() {
@@ -50175,539 +50177,140 @@ var RadioListExports = requireRadioList();
 const RadioList = /* @__PURE__ */ getDefaultExportFromCjs(RadioListExports);
 var TrashCanCrossExports = requireTrashCanCross();
 const TrashCanCross = /* @__PURE__ */ getDefaultExportFromCjs(TrashCanCrossExports);
-const KVStoreDataForm = (props) => {
-  const config2 = props.dataInputAppConfig || {};
-  const modalToggle = React.useRef(null);
-  const [collectionNames, setCollectionNames] = reactExports.useState([]);
-  const [showCreateKVModal, setShowCreateKVModal] = reactExports.useState(false);
-  const [name, setInputName] = reactExports.useState(config2.name ?? "");
-  const [dataInputType, setDataInputType] = reactExports.useState(config2.input_type ?? "kvstore");
-  const [url2, setUrl] = reactExports.useState(config2.url ?? "https://dummyjson.com/products");
-  const [http_headers, setHttpHeaders] = reactExports.useState(config2.http_headers ?? [""]);
-  const [cronExpression, setCronExpression] = reactExports.useState(config2.cron_expression ?? "0 * * * *");
-  const [selected_output_location, setSelectedCollection] = reactExports.useState(config2.selected_output_location ?? "");
-  const [mode, setMode] = reactExports.useState(config2.mode ?? "overwrite");
-  const updateConfigField = (key2, value) => {
-    if (props.setDataInputAppConfig) {
-      props.setDataInputAppConfig((prev) => ({
-        ...prev,
-        [key2]: value
-      }));
+var SwitchExports = requireSwitch();
+const Switch = /* @__PURE__ */ getDefaultExportFromCjs(SwitchExports);
+function detectArraysInJson(data, currentPath = "$") {
+  const arrays = [];
+  if (Array.isArray(data)) {
+    arrays.push({
+      path: currentPath,
+      length: data.length,
+      sampleItem: data[0]
+    });
+    if (data.length > 0 && typeof data[0] === "object" && data[0] !== null) {
+      const nested = detectArraysInJson(data[0], `${currentPath}[*]`);
+      arrays.push(...nested);
     }
-  };
-  const [jsonPathValues, setJsonPathValues] = reactExports.useState(
-    config2.excluded_json_paths && config2.excluded_json_paths.length > 0 ? config2.excluded_json_paths : [""]
-  );
-  React.useEffect(() => {
-    getAllCollectionNames().then((result) => {
-      setCollectionNames(result);
-    });
-  }, []);
-  const handleNewJsonPathExclusion = () => {
-    setJsonPathValues((prev) => {
-      const updated = [...prev, ""];
-      props.onJSONPathsChange(updated.filter(Boolean));
-      updateConfigField("excluded_json_paths", updated.filter(Boolean));
-      return updated;
-    });
-  };
-  const handleRemoveJsonPathRow = (index) => {
-    if (index === 0) return;
-    setJsonPathValues((prev) => {
-      if (prev.length === 1) return prev;
-      const updated = prev.filter((_2, i2) => i2 !== index);
-      props.onJSONPathsChange(updated.filter(Boolean));
-      updateConfigField("excluded_json_paths", updated.filter(Boolean));
-      return updated;
-    });
-  };
-  const handleJsonPathTextChange = (value, { index }) => {
-    setJsonPathValues((prev) => {
-      const updated = prev.map((v2, i2) => i2 === index ? value : v2);
-      props.onJSONPathsChange(updated.filter(Boolean));
-      updateConfigField("excluded_json_paths", updated.filter(Boolean));
-      return updated;
-    });
-  };
-  const controlledJsonPathRows = jsonPathValues.map((value, i2) => /* @__PURE__ */ jsxRuntimeExports.jsx(FormRows.Row, { index: i2, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex" }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flexGrow: 1, marginRight: "8px", minWidth: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Text,
-      {
-        style: { width: "100%", minWidth: i2 === 0 ? "577px" : "542px", fontSize: "1.1em" },
-        placeholder: "e.g. $.bar[*].baz",
-        value,
-        onChange: (_2, { value: value2 }) => handleJsonPathTextChange(value2, { index: i2 })
-      }
-    ) }),
-    i2 !== 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Button,
-      {
-        inline: true,
-        appearance: "secondary",
-        onClick: () => handleRemoveJsonPathRow(i2),
-        label: "",
-        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(TrashCanCross, {})
-      }
-    )
-  ] }) }, i2));
-  const handleNewHttpHeader = () => {
-    setHttpHeaders((prev) => [...prev, ""]);
-  };
-  const handleRemoveHttpHeader = (index) => {
-    if (index === 0) return;
-    setHttpHeaders((prev) => {
-      if (prev.length === 1) return prev;
-      return prev.filter((_2, i2) => i2 !== index);
-    });
-  };
-  const handleHttpHeaderTextChange = (value, { index }) => {
-    setHttpHeaders((prev) => {
-      const updated = prev.map((v2, i2) => i2 === index ? value : v2);
-      updateConfigField("http_headers", updated.filter(Boolean));
-      return updated;
-    });
-  };
-  const controlledHttpHeaderRows = http_headers.map((value, i2) => /* @__PURE__ */ jsxRuntimeExports.jsx(FormRows.Row, { index: i2, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flexGrow: 1, marginRight: "8px", minWidth: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Text,
-      {
-        style: { width: "100%", minWidth: i2 === 0 ? "577px" : "542px", fontSize: "1.1em" },
-        placeholder: "Header: Value",
-        value,
-        onChange: (_2, { value: value2 }) => handleHttpHeaderTextChange(value2, { index: i2 })
-      }
-    ) }),
-    i2 !== 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Button,
-      {
-        inline: true,
-        appearance: "secondary",
-        onClick: () => handleRemoveHttpHeader(i2),
-        label: "",
-        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(TrashCanCross, {})
-      }
-    )
-  ] }) }, i2));
-  const getPaths = () => jsonPathValues.filter(Boolean);
-  const clearInputs = () => {
-    setInputName("");
-    setDataInputType("kvstore");
-    setUrl("https://dummyjson.com/products");
-    setCronExpression("0 * * * *");
-    setSelectedCollection("");
-    setMode("overwrite");
-    setJsonPathValues([""]);
-    setHttpHeaders([""]);
-    props.onJSONPathsChange([]);
-    props.setJsonPreview && props.setJsonPreview("");
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Input Name:", required: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Text,
-      {
-        value: name,
-        onChange: (_2, { value }) => {
-          updateConfigField("name", value);
-          setInputName(value);
-        },
-        placeholder: "Enter input name",
-        required: true,
-        canClear: true
-      }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(ControlGroup, { label: "API URL:", required: true, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Text,
-        {
-          value: url2,
-          onChange: (_2, { value }) => {
-            updateConfigField("url", value);
-            setUrl(value);
-          },
-          disabled: props.loading,
-          canClear: true,
-          required: true
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Button,
-        {
-          type: "submit",
-          disabled: props.loading,
-          onClick: () => props.fetchDataPreview(url2, getPaths()),
-          children: props.loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(WaitSpinner, { size: "medium" }) : "Fetch"
-        }
-      )
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "HTTP Headers", tooltip: "Add one or more HTTP headers in the format 'Header: Value'", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      FormRows,
-      {
-        onRequestAdd: handleNewHttpHeader,
-        addLabel: "Add HTTP Header",
-        children: controlledHttpHeaderRows
-      }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Cron Expression:", required: true, tooltip: "Cron expression for scheduling data input", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Text,
-      {
-        value: cronExpression,
-        onChange: (_2, { value }) => {
-          updateConfigField("cron_expression", value);
-          setCronExpression(value);
-        },
-        placeholder: "0 * * * *",
-        required: true
-      }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Exclude JSONPaths", tooltip: "Provide one or more JSONPath expressions to exclude fields from the JSON.", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      FormRows,
-      {
-        onRequestAdd: handleNewJsonPathExclusion,
-        addLabel: "Add Exclude JSONPath",
-        children: controlledJsonPathRows
-      }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(ControlGroup, { label: "Select KV Store Collection:", required: true, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Select,
-        {
-          value: selected_output_location,
-          onChange: (_2, { value }) => {
-            updateConfigField("selected_output_location", String(value));
-            setSelectedCollection(String(value));
-          },
-          filter: true,
-          placeholder: "Filter collections...",
-          style: { flex: 1, minWidth: "400px" },
-          children: collectionNames.map((collection) => /* @__PURE__ */ jsxRuntimeExports.jsx(Select.Option, { value: `${collection.app}/${collection.name}`, label: `${collection.name} (${collection.app})` }, `${collection.name} (${collection.app})`))
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { appearance: "secondary", onClick: () => setShowCreateKVModal(true), elementRef: modalToggle, children: "Create New KV Store" })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      NewKVStoreForm,
-      {
-        open: showCreateKVModal,
-        onClose: () => setShowCreateKVModal(false),
-        initialFields: props.fieldsForKvStoreCreation,
-        onCreate: async (name2, app, fields) => {
-          try {
-            await createNewKVStoreCollection(name2, app, fields);
-            const result = await getAllCollectionNames();
-            setCollectionNames(result);
-            setSelectedCollection(generateSelectedOutputString(app, name2));
-            setShowCreateKVModal(false);
-          } catch (err) {
-            props.setError(`Failed to create KV Store collection: ${err instanceof Error ? err.message : "Unknown error"}`);
-            return;
-          }
-        },
-        modalToggle
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Mode:", tooltip: "How would you like to manage the existing data in the collection?", required: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(RadioList, { value: mode, onChange: (_2, { value }) => {
-      setMode(value);
-      updateConfigField("mode", value);
-    }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(RadioList.Option, { value: "overwrite", children: "overwrite" }) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-    !props.dataInputAppConfig && /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Button,
-      {
-        appearance: "primary",
-        onClick: () => {
-          props.handleSave(
-            {
-              name,
-              input_type: dataInputType,
-              url: url2,
-              http_headers,
-              excluded_json_paths: getPaths(),
-              enabled: true,
-              cron_expression: cronExpression,
-              selected_output_location,
-              mode
-            },
-            clearInputs
-          );
-        },
-        children: "Save Data Input"
-      }
-    )
-  ] });
-};
-const NewKVStoreDataInputForm = ({ dataInputAppConfig, setDataInputAppConfig, onDataFetched, onSuccess }) => {
-  const [error, setError] = reactExports.useState(null);
-  const [loading, setLoading] = reactExports.useState(false);
-  const [rawData, setRawData] = reactExports.useState(null);
-  const [filteredData, setFilteredData] = reactExports.useState({});
-  const initialFields = reactExports.useMemo(() => {
-    if (filteredData && Object.keys(filteredData).length > 0) {
-      return Object.keys(filteredData);
-    } else if (rawData && Object.keys(rawData).length > 0) {
-      return Object.keys(rawData);
-    } else {
-      return [];
-    }
-  }, [filteredData, rawData]);
-  const onJSONPathsChange = (jsonPaths) => {
-    if (!rawData) return;
-    const filtered = jsonPaths.length ? removeByJsonPaths(rawData, jsonPaths) : rawData;
-    setFilteredData(filtered);
-    if (onDataFetched) onDataFetched(JSON.stringify(filtered));
-  };
-  async function fetchDataPreview(url2, jsonPaths) {
-    setError(null);
-    setLoading(true);
-    if (onDataFetched) onDataFetched("");
-    try {
-      if (!url2) throw new Error("Please enter a URL");
-      const response = await fetch(url2);
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
-      const data = await response.json();
-      setRawData(data);
-      const filtered = jsonPaths.length ? removeByJsonPaths(data, jsonPaths) : data;
-      if (onDataFetched) onDataFetched(JSON.stringify(filtered));
-    } catch (err) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Unknown error");
-    } finally {
-      setLoading(false);
+  } else if (typeof data === "object" && data !== null) {
+    for (const [key2, value] of Object.entries(data)) {
+      const nested = detectArraysInJson(value, `${currentPath}.${key2}`);
+      arrays.push(...nested);
     }
   }
-  const handleSaveDataInput = async (formData, clearInputs) => {
-    if (!formData.name || !formData.url || !formData.input_type || !formData.cron_expression || formData.input_type === "kvstore" && !formData.selected_output_location) {
-      setError("Not all required fields are filled out");
-      return;
-    }
-    if (formData.input_type === "kvstore") {
-      try {
-        await addNewDataInputToKVStore(formData);
-        setError(null);
-        if (onSuccess) onSuccess();
-        if (clearInputs) clearInputs();
-      } catch {
-        setError("Failed to save data input to KV Store");
+  return arrays;
+}
+function getValueAtPath(data, path) {
+  if (path === "$") return data;
+  const parts = path.replace(/^\$\.?/, "").split(".");
+  let current = data;
+  for (const part of parts) {
+    if (current === null || current === void 0) return void 0;
+    if (typeof current !== "object") return void 0;
+    current = current[part];
+  }
+  return current;
+}
+function generateSeparateEvents(data, separateArrayPaths) {
+  if (!separateArrayPaths || separateArrayPaths.length === 0) {
+    return [data];
+  }
+  const events2 = [];
+  for (const arrayPath of separateArrayPaths) {
+    const arrayData = getValueAtPath(data, arrayPath);
+    if (Array.isArray(arrayData)) {
+      const fieldName = arrayPath.split(".").pop() || "item";
+      for (const item of arrayData) {
+        events2.push({
+          _source_array: fieldName,
+          _array_path: arrayPath,
+          ...typeof item === "object" && item !== null ? item : { value: item }
+        });
       }
+    }
+  }
+  if (events2.length === 0) {
+    return [data];
+  }
+  return events2;
+}
+const Container = qe.div`
+    margin-top: 8px;
+`;
+const ArrayItem = qe.div`
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: #f5f5f5;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-size: 13px;
+
+    &:hover {
+        background: #eee;
+    }
+`;
+const PathInfo = qe.div`
+    flex: 1;
+    margin-left: 12px;
+`;
+const PathName = qe.span`
+    color: #881391;
+    font-weight: 500;
+`;
+const ArrayLength = qe.span`
+    color: #666;
+    margin-left: 8px;
+    font-size: 12px;
+`;
+const NoArraysMessage = qe.p`
+    color: #666;
+    font-style: italic;
+    font-size: 13px;
+    margin: 8px 0;
+`;
+const ArrayFieldSelector = ({
+  data,
+  selectedPaths,
+  onSelectionChange
+}) => {
+  const detectedArrays = reactExports.useMemo(() => {
+    if (!data) return [];
+    return detectArraysInJson(data);
+  }, [data]);
+  const handleToggle = (path) => {
+    const isCurrentlySelected = selectedPaths.includes(path);
+    if (isCurrentlySelected) {
+      onSelectionChange(selectedPaths.filter((p2) => p2 !== path));
+    } else {
+      onSelectionChange([...selectedPaths, path]);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    error && /* @__PURE__ */ jsxRuntimeExports.jsx(Message, { style: { marginBottom: "10px" }, appearance: "fill", type: "error", children: error }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(KVStoreDataForm, { dataInputAppConfig, setDataInputAppConfig, fetchDataPreview, setJsonPreview: onDataFetched, fieldsForKvStoreCreation: initialFields, loading, handleSave: handleSaveDataInput, setError, onJSONPathsChange })
-  ] });
+  if (!data) {
+    return null;
+  }
+  if (detectedArrays.length === 0) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(NoArraysMessage, { children: "No arrays detected in the response" }) });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { children: detectedArrays.map((arr) => /* @__PURE__ */ jsxRuntimeExports.jsxs(ArrayItem, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Switch,
+      {
+        selected: selectedPaths.includes(arr.path),
+        onClick: () => handleToggle(arr.path),
+        appearance: "toggle"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(PathInfo, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(PathName, { children: arr.path }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(ArrayLength, { children: [
+        "(",
+        arr.length,
+        " items)"
+      ] })
+    ] })
+  ] }, arr.path)) });
 };
-var HeadingExports = requireHeading();
-const Heading = /* @__PURE__ */ getDefaultExportFromCjs(HeadingExports);
-function JSONViewer({ initialData }) {
-  const { parsedJSON, isValidJSON } = reactExports.useMemo(() => {
-    if (!initialData) return { parsedJSON: null, isValidJSON: true };
-    try {
-      const parsed = JSON.parse(initialData);
-      return { parsedJSON: parsed, isValidJSON: true };
-    } catch {
-      return { parsedJSON: null, isValidJSON: false };
-    }
-  }, [initialData]);
-  const JSONTreeMemo = reactExports.useMemo(() => {
-    return parsedJSON ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(JSONTree, { json: parsedJSON, defaultExpanded: true }) }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Message, { type: "info", children: "complete fetch data to see preview" });
-  }, [parsedJSON]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Heading, { level: 2, children: "Preview" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-    isValidJSON ? JSONTreeMemo : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { color: "error", style: { marginTop: 1, textAlign: "center" }, children: "Invalid JSON data provided." })
-  ] });
-}
-var MessageBar$1 = { exports: {} };
-var hasRequiredMessageBar;
-function requireMessageBar() {
-  if (hasRequiredMessageBar) return MessageBar$1.exports;
-  hasRequiredMessageBar = 1;
-  (() => {
-    var e2 = {};
-    (() => {
-      e2.n = (r3) => {
-        var n3 = r3 && r3.__esModule ? (
-          /******/
-          () => r3["default"]
-        ) : () => r3;
-        e2.d(n3, {
-          a: n3
-        });
-        return n3;
-      };
-    })();
-    (() => {
-      e2.d = (r3, n3) => {
-        for (var t3 in n3) {
-          if (e2.o(n3, t3) && !e2.o(r3, t3)) {
-            Object.defineProperty(r3, t3, {
-              enumerable: true,
-              get: n3[t3]
-            });
-          }
-        }
-      };
-    })();
-    (() => {
-      e2.o = (e3, r3) => Object.prototype.hasOwnProperty.call(e3, r3);
-    })();
-    (() => {
-      e2.r = (e3) => {
-        if (typeof Symbol !== "undefined" && Symbol.toStringTag) {
-          Object.defineProperty(e3, Symbol.toStringTag, {
-            value: "Module"
-          });
-        }
-        Object.defineProperty(e3, "__esModule", {
-          value: true
-        });
-      };
-    })();
-    var r2 = {};
-    e2.r(r2);
-    e2.d(r2, {
-      default: () => (
-        /* reexport */
-        B2
-      )
-    });
-    const n2 = requireReact();
-    var t2 = e2.n(n2);
-    const a2 = /* @__PURE__ */ requirePropTypes();
-    var i2 = e2.n(a2);
-    const o2 = requireCheckCircle();
-    var s2 = e2.n(o2);
-    const l2 = requireCross();
-    var c2 = e2.n(l2);
-    const u2 = requireExclamationTriangle();
-    var p2 = e2.n(u2);
-    const d2 = requireInformationCircle();
-    var f2 = e2.n(d2);
-    const v2 = requireInformationDiamond();
-    var g2 = e2.n(v2);
-    const m2 = requireScreenReaderContent();
-    var y2 = e2.n(m2);
-    const b2 = requireI18n();
-    const C2 = require$$21;
-    var h2 = e2.n(C2);
-    const w2 = requireButton();
-    var S2 = e2.n(w2);
-    const k2 = requireThemes();
-    var q2 = h2().div.withConfig({
-      displayName: "MessageBarStyles__MessageBarContent",
-      componentId: "sc-1uyhzza-0"
-    })(["", ";", ";grid-column:content;grid-row:1 / -1;max-width:", ";word-wrap:break-word;"], k2.mixins.reset("inline"), k2.mixins.typography("body"), k2.variables.lineLength);
-    var _2 = h2()(S2()).withConfig({
-      displayName: "MessageBarStyles__StyledCloseButton",
-      componentId: "sc-1uyhzza-1"
-    })(["grid-column:close;"]);
-    var O2 = h2().span.withConfig({
-      displayName: "MessageBarStyles__StyledIcon",
-      componentId: "sc-1uyhzza-2"
-    })(["width:20px;height:20px;margin-left:auto;fill:", ";grid-row:1;grid-column:icon;"], (0, k2.pickVariant)("$type", {
-      info: k2.variables.notificationColorInfo,
-      success: k2.variables.notificationColorPositive,
-      warning: k2.variables.notificationColorCaution,
-      error: k2.variables.notificationColorNegative
-    }));
-    var I2 = h2().div.withConfig({
-      displayName: "MessageBarStyles__MessageBarWrapper",
-      componentId: "sc-1uyhzza-3"
-    })(["", ";grid-template-columns:[icon] 20px ", " [content] fit-content(", ") minmax(", ",1fr) [close] min-content;grid-template-rows:1lh auto;align-items:center;border:1px solid ", ";border-radius:", ";background-color:", ";padding:", " ", ";width:100%;"], k2.mixins.reset("grid"), k2.variables.spacingSmall, k2.variables.lineLength, k2.variables.spacingSmall, (0, k2.pickVariant)("$type", {
-      info: k2.variables.notificationColorInfoStrong,
-      success: k2.variables.notificationColorPositiveStrong,
-      warning: k2.variables.notificationColorCautionStrong,
-      error: k2.variables.notificationColorNegativeStrong
-    }), k2.variables.borderRadius, (0, k2.pickVariant)("$type", {
-      info: k2.variables.notificationColorInfoWeak,
-      success: k2.variables.notificationColorPositiveWeak,
-      warning: k2.variables.notificationColorCautionWeak,
-      error: k2.variables.notificationColorNegativeWeak
-    }), k2.variables.spacingSmall, k2.variables.spacingMedium);
-    function x2() {
-      return x2 = Object.assign ? Object.assign.bind() : function(e3) {
-        for (var r3 = 1; r3 < arguments.length; r3++) {
-          var n3 = arguments[r3];
-          for (var t3 in n3) {
-            ({}).hasOwnProperty.call(n3, t3) && (e3[t3] = n3[t3]);
-          }
-        }
-        return e3;
-      }, x2.apply(null, arguments);
-    }
-    function P2(e3, r3) {
-      if (null == e3) return {};
-      var n3, t3, a3 = j2(e3, r3);
-      if (Object.getOwnPropertySymbols) {
-        var i3 = Object.getOwnPropertySymbols(e3);
-        for (t3 = 0; t3 < i3.length; t3++) {
-          n3 = i3[t3], r3.includes(n3) || {}.propertyIsEnumerable.call(e3, n3) && (a3[n3] = e3[n3]);
-        }
-      }
-      return a3;
-    }
-    function j2(e3, r3) {
-      if (null == e3) return {};
-      var n3 = {};
-      for (var t3 in e3) {
-        if ({}.hasOwnProperty.call(e3, t3)) {
-          if (r3.includes(t3)) continue;
-          n3[t3] = e3[t3];
-        }
-      }
-      return n3;
-    }
-    var z2 = {
-      children: i2().node.isRequired,
-      onRequestClose: i2().func,
-      type: i2().oneOf(["info", "success", "warning", "error"]).isRequired
-    };
-    var M2 = Object.freeze({
-      info: (0, b2._)("Info"),
-      warning: (0, b2._)("Warning"),
-      error: (0, b2._)("Alert"),
-      success: (0, b2._)("Success")
-    });
-    var E2 = Object.freeze({
-      info: f2(),
-      warning: g2(),
-      error: p2(),
-      success: s2()
-    });
-    function R2(e3) {
-      var r3 = e3.children, n3 = e3.elementRef, a3 = e3.onRequestClose, i3 = e3.type, o3 = P2(e3, ["children", "elementRef", "onRequestClose", "type"]);
-      var s3 = E2[i3];
-      var l3 = M2[i3];
-      return t2().createElement(I2, x2({
-        ref: n3,
-        $type: i3,
-        "data-test": "message-bar",
-        "data-test-type": i3
-      }, o3, {
-        role: "region"
-      }), t2().createElement(O2, {
-        as: s3,
-        $type: i3,
-        variant: "filled",
-        "aria-hidden": true,
-        "data-test": "icon"
-      }), t2().createElement(y2(), null, l3), t2().createElement(q2, {
-        "data-test": "content"
-      }, r3), a3 && t2().createElement(_2, {
-        appearance: "subtle",
-        onClick: a3
-      }, t2().createElement(c2(), null), t2().createElement(y2(), null, (0, b2._)("Close"))));
-    }
-    R2.propTypes = z2;
-    const B2 = R2;
-    MessageBar$1.exports = r2;
-  })();
-  return MessageBar$1.exports;
-}
-var MessageBarExports = requireMessageBar();
-const MessageBar = /* @__PURE__ */ getDefaultExportFromCjs(MessageBarExports);
-var idExports = requireId();
 var TabBar$1 = { exports: {} };
 var DotsThreeVertical = { exports: {} };
 var hasRequiredDotsThreeVertical;
@@ -51659,6 +51262,1019 @@ function requireTabBar() {
 }
 var TabBarExports = requireTabBar();
 const TabBar = /* @__PURE__ */ getDefaultExportFromCjs(TabBarExports);
+const PreviewContainer = qe.div`
+    max-height: 500px;
+    overflow-y: auto;
+`;
+const EventCard = qe.div`
+    background: #1e1e1e;
+    border-radius: 4px;
+    margin: 8px 0;
+    overflow: hidden;
+`;
+const EventHeader = qe.div`
+    background: #2d2d2d;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+`;
+const EventNumber = qe.span`
+    color: #4fc3f7;
+    font-weight: 500;
+`;
+const SourceBadge = qe.span`
+    background: #3d5afe;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+`;
+const EventBody = qe.pre`
+    margin: 0;
+    padding: 12px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-size: 12px;
+    color: #d4d4d4;
+    white-space: pre-wrap;
+    word-break: break-all;
+`;
+const SummaryBar = qe.div`
+    background: #e3f2fd;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+`;
+const SummaryText = qe.span`
+    font-size: 14px;
+    color: #1565c0;
+`;
+const SummaryCount = qe.span`
+    font-size: 24px;
+    font-weight: 600;
+    color: #1565c0;
+`;
+const NoSelectionMessage = qe.div`
+    text-align: center;
+    padding: 40px;
+    color: #666;
+`;
+const PaginationBar = qe.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+`;
+const PageInfo = qe.span`
+    color: #666;
+    font-size: 14px;
+`;
+const EventPreviewModal = ({
+  open,
+  onClose,
+  data,
+  separateArrayPaths,
+  modalToggle
+}) => {
+  const [activeTab, setActiveTab] = reactExports.useState("separated");
+  const [currentPage, setCurrentPage] = reactExports.useState(0);
+  const eventsPerPage = 10;
+  const separatedEvents = reactExports.useMemo(() => {
+    if (!data) return [];
+    return generateSeparateEvents(data, separateArrayPaths);
+  }, [data, separateArrayPaths]);
+  const totalPages = Math.ceil(separatedEvents.length / eventsPerPage);
+  const paginatedEvents = separatedEvents.slice(
+    currentPage * eventsPerPage,
+    (currentPage + 1) * eventsPerPage
+  );
+  const handleTabChange = (_2, { selectedTabId }) => {
+    if (selectedTabId) {
+      setActiveTab(selectedTabId);
+      setCurrentPage(0);
+    }
+  };
+  const renderEvent = (event, _index, globalIndex) => {
+    const eventObj = event;
+    const sourceArray = eventObj._source_array;
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(EventCard, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(EventHeader, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(EventNumber, { children: [
+          "Event #",
+          globalIndex + 1
+        ] }),
+        sourceArray && /* @__PURE__ */ jsxRuntimeExports.jsxs(SourceBadge, { children: [
+          "from: ",
+          sourceArray
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(EventBody, { children: JSON.stringify(event, null, 2) })
+    ] }, globalIndex);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Modal,
+    {
+      open,
+      onRequestClose: onClose,
+      returnFocus: modalToggle,
+      style: { width: "800px" },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Modal.Header, { title: "Event Preview - How data will appear in Splunk" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Modal.Body, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(TabBar, { activeTabId: activeTab, onChange: handleTabChange, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TabBar.Tab,
+              {
+                label: `Separated Events (${separatedEvents.length})`,
+                tabId: "separated"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TabBar.Tab,
+              {
+                label: "Original (1 event)",
+                tabId: "original"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PreviewContainer, { children: activeTab === "separated" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(SummaryBar, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(SummaryText, { children: separateArrayPaths.length > 0 ? `Arrays being separated: ${separateArrayPaths.join(", ")}` : "No arrays selected for separation" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(SummaryCount, { children: separatedEvents.length }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(SummaryText, { children: " events" })
+              ] })
+            ] }),
+            separateArrayPaths.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(NoSelectionMessage, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Select arrays above to see how they will be separated into individual events." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Each array item will become a separate Splunk event." })
+            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              paginatedEvents.map(
+                (event, idx) => renderEvent(event, idx, currentPage * eventsPerPage + idx)
+              ),
+              totalPages > 1 && /* @__PURE__ */ jsxRuntimeExports.jsxs(PaginationBar, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button,
+                  {
+                    appearance: "secondary",
+                    disabled: currentPage === 0,
+                    onClick: () => setCurrentPage((p2) => p2 - 1),
+                    children: "Previous"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(PageInfo, { children: [
+                  "Page ",
+                  currentPage + 1,
+                  " of ",
+                  totalPages
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button,
+                  {
+                    appearance: "secondary",
+                    disabled: currentPage >= totalPages - 1,
+                    onClick: () => setCurrentPage((p2) => p2 + 1),
+                    children: "Next"
+                  }
+                )
+              ] })
+            ] })
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(SummaryBar, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(SummaryText, { children: "Original response as single event" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(SummaryCount, { children: "1" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(SummaryText, { children: " event" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(EventCard, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(EventHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(EventNumber, { children: "Event #1" }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(EventBody, { children: JSON.stringify(data, null, 2) })
+            ] })
+          ] }) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Modal.Footer, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { appearance: "secondary", onClick: onClose, children: "Close" }) })
+      ]
+    }
+  );
+};
+const KVStoreDataForm = (props) => {
+  const config2 = props.dataInputAppConfig || {};
+  const modalToggle = React.useRef(null);
+  const previewModalToggle = React.useRef(null);
+  const [collectionNames, setCollectionNames] = reactExports.useState([]);
+  const [showCreateKVModal, setShowCreateKVModal] = reactExports.useState(false);
+  const [showPreviewModal, setShowPreviewModal] = reactExports.useState(false);
+  const [name, setInputName] = reactExports.useState(config2.name ?? "");
+  const [dataInputType, setDataInputType] = reactExports.useState(config2.input_type ?? "kvstore");
+  const [url2, setUrl] = reactExports.useState(config2.url ?? "https://dummyjson.com/products");
+  const [http_headers, setHttpHeaders] = reactExports.useState(config2.http_headers ?? [""]);
+  const [cronExpression, setCronExpression] = reactExports.useState(config2.cron_expression ?? "0 * * * *");
+  const [selected_output_location, setSelectedCollection] = reactExports.useState(config2.selected_output_location ?? "");
+  const [mode, setMode] = reactExports.useState(config2.mode ?? "overwrite");
+  const [separateArrayPaths, setSeparateArrayPaths] = reactExports.useState(config2.separate_array_paths ?? []);
+  const updateConfigField = (key2, value) => {
+    if (props.setDataInputAppConfig) {
+      props.setDataInputAppConfig((prev) => ({
+        ...prev,
+        [key2]: value
+      }));
+    }
+  };
+  const [jsonPathValues, setJsonPathValues] = reactExports.useState(
+    config2.excluded_json_paths && config2.excluded_json_paths.length > 0 ? config2.excluded_json_paths : [""]
+  );
+  React.useEffect(() => {
+    getAllCollectionNames().then((result) => {
+      setCollectionNames(result);
+    });
+  }, []);
+  React.useEffect(() => {
+    if (props.onAddExcludePathRef) {
+      props.onAddExcludePathRef((path) => {
+        setJsonPathValues((prev) => {
+          if (prev.includes(path)) return prev;
+          const updated = prev[0] === "" ? [path] : [...prev, path];
+          props.onJSONPathsChange(updated.filter(Boolean));
+          updateConfigField("excluded_json_paths", updated.filter(Boolean));
+          return updated;
+        });
+      });
+    }
+  }, [props.onAddExcludePathRef]);
+  const handleNewJsonPathExclusion = () => {
+    setJsonPathValues((prev) => {
+      const updated = [...prev, ""];
+      props.onJSONPathsChange(updated.filter(Boolean));
+      updateConfigField("excluded_json_paths", updated.filter(Boolean));
+      return updated;
+    });
+  };
+  const handleRemoveJsonPathRow = (index) => {
+    if (index === 0) return;
+    setJsonPathValues((prev) => {
+      if (prev.length === 1) return prev;
+      const updated = prev.filter((_2, i2) => i2 !== index);
+      props.onJSONPathsChange(updated.filter(Boolean));
+      updateConfigField("excluded_json_paths", updated.filter(Boolean));
+      return updated;
+    });
+  };
+  const handleJsonPathTextChange = (value, { index }) => {
+    setJsonPathValues((prev) => {
+      const updated = prev.map((v2, i2) => i2 === index ? value : v2);
+      props.onJSONPathsChange(updated.filter(Boolean));
+      updateConfigField("excluded_json_paths", updated.filter(Boolean));
+      return updated;
+    });
+  };
+  const controlledJsonPathRows = jsonPathValues.map((value, i2) => /* @__PURE__ */ jsxRuntimeExports.jsx(FormRows.Row, { index: i2, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex" }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flexGrow: 1, marginRight: "8px", minWidth: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Text,
+      {
+        style: { width: "100%", minWidth: i2 === 0 ? "577px" : "542px", fontSize: "1.1em" },
+        placeholder: "e.g. $.bar[*].baz",
+        value,
+        onChange: (_2, { value: value2 }) => handleJsonPathTextChange(value2, { index: i2 })
+      }
+    ) }),
+    i2 !== 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button,
+      {
+        inline: true,
+        appearance: "secondary",
+        onClick: () => handleRemoveJsonPathRow(i2),
+        label: "",
+        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(TrashCanCross, {})
+      }
+    )
+  ] }) }, i2));
+  const handleNewHttpHeader = () => {
+    setHttpHeaders((prev) => [...prev, ""]);
+  };
+  const handleRemoveHttpHeader = (index) => {
+    if (index === 0) return;
+    setHttpHeaders((prev) => {
+      if (prev.length === 1) return prev;
+      return prev.filter((_2, i2) => i2 !== index);
+    });
+  };
+  const handleHttpHeaderTextChange = (value, { index }) => {
+    setHttpHeaders((prev) => {
+      const updated = prev.map((v2, i2) => i2 === index ? value : v2);
+      updateConfigField("http_headers", updated.filter(Boolean));
+      return updated;
+    });
+  };
+  const controlledHttpHeaderRows = http_headers.map((value, i2) => /* @__PURE__ */ jsxRuntimeExports.jsx(FormRows.Row, { index: i2, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flexGrow: 1, marginRight: "8px", minWidth: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Text,
+      {
+        style: { width: "100%", minWidth: i2 === 0 ? "577px" : "542px", fontSize: "1.1em" },
+        placeholder: "Header: Value",
+        value,
+        onChange: (_2, { value: value2 }) => handleHttpHeaderTextChange(value2, { index: i2 })
+      }
+    ) }),
+    i2 !== 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button,
+      {
+        inline: true,
+        appearance: "secondary",
+        onClick: () => handleRemoveHttpHeader(i2),
+        label: "",
+        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(TrashCanCross, {})
+      }
+    )
+  ] }) }, i2));
+  const getPaths = () => jsonPathValues.filter(Boolean);
+  const clearInputs = () => {
+    setInputName("");
+    setDataInputType("kvstore");
+    setUrl("https://dummyjson.com/products");
+    setCronExpression("0 * * * *");
+    setSelectedCollection("");
+    setMode("overwrite");
+    setJsonPathValues([""]);
+    setHttpHeaders([""]);
+    setSeparateArrayPaths([]);
+    props.onJSONPathsChange([]);
+    props.setJsonPreview && props.setJsonPreview("");
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Input Name:", required: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Text,
+      {
+        value: name,
+        onChange: (_2, { value }) => {
+          updateConfigField("name", value);
+          setInputName(value);
+        },
+        placeholder: "Enter input name",
+        required: true,
+        canClear: true
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(ControlGroup, { label: "API URL:", required: true, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Text,
+        {
+          value: url2,
+          onChange: (_2, { value }) => {
+            updateConfigField("url", value);
+            setUrl(value);
+          },
+          disabled: props.loading,
+          canClear: true,
+          required: true
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          type: "submit",
+          disabled: props.loading,
+          onClick: () => props.fetchDataPreview(url2, getPaths()),
+          children: props.loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(WaitSpinner, { size: "medium" }) : "Fetch"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "HTTP Headers", tooltip: "Add one or more HTTP headers in the format 'Header: Value'", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      FormRows,
+      {
+        onRequestAdd: handleNewHttpHeader,
+        addLabel: "Add HTTP Header",
+        children: controlledHttpHeaderRows
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Cron Expression:", required: true, tooltip: "Cron expression for scheduling data input", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Text,
+      {
+        value: cronExpression,
+        onChange: (_2, { value }) => {
+          updateConfigField("cron_expression", value);
+          setCronExpression(value);
+        },
+        placeholder: "0 * * * *",
+        required: true
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Exclude JSONPaths", tooltip: "Provide one or more JSONPath expressions to exclude fields from the JSON.", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      FormRows,
+      {
+        onRequestAdd: handleNewJsonPathExclusion,
+        addLabel: "Add Exclude JSONPath",
+        children: controlledJsonPathRows
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Separate Arrays as Events", tooltip: "Select which arrays should be split into separate events. Each array item will become its own event in Splunk.", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { width: "100%" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ArrayFieldSelector,
+        {
+          data: props.rawData,
+          selectedPaths: separateArrayPaths,
+          onSelectionChange: (paths) => {
+            setSeparateArrayPaths(paths);
+            updateConfigField("separate_array_paths", paths);
+          }
+        }
+      ),
+      !!props.rawData && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          appearance: "secondary",
+          onClick: () => setShowPreviewModal(true),
+          elementRef: previewModalToggle,
+          style: { marginTop: "12px" },
+          children: "Preview Events"
+        }
+      )
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      EventPreviewModal,
+      {
+        open: showPreviewModal,
+        onClose: () => setShowPreviewModal(false),
+        data: props.rawData,
+        separateArrayPaths,
+        modalToggle: previewModalToggle
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(ControlGroup, { label: "Select KV Store Collection:", required: true, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Select,
+        {
+          value: selected_output_location,
+          onChange: (_2, { value }) => {
+            updateConfigField("selected_output_location", String(value));
+            setSelectedCollection(String(value));
+          },
+          filter: true,
+          placeholder: "Filter collections...",
+          style: { flex: 1, minWidth: "400px" },
+          children: collectionNames.map((collection) => /* @__PURE__ */ jsxRuntimeExports.jsx(Select.Option, { value: `${collection.app}/${collection.name}`, label: `${collection.name} (${collection.app})` }, `${collection.name} (${collection.app})`))
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { appearance: "secondary", onClick: () => setShowCreateKVModal(true), elementRef: modalToggle, children: "Create New KV Store" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      NewKVStoreForm,
+      {
+        open: showCreateKVModal,
+        onClose: () => setShowCreateKVModal(false),
+        initialFields: props.fieldsForKvStoreCreation,
+        onCreate: async (name2, app, fields) => {
+          try {
+            await createNewKVStoreCollection(name2, app, fields);
+            const result = await getAllCollectionNames();
+            setCollectionNames(result);
+            setSelectedCollection(generateSelectedOutputString(app, name2));
+            setShowCreateKVModal(false);
+          } catch (err) {
+            props.setError(`Failed to create KV Store collection: ${err instanceof Error ? err.message : "Unknown error"}`);
+            return;
+          }
+        },
+        modalToggle
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Mode:", tooltip: "How would you like to manage the existing data in the collection?", required: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(RadioList, { value: mode, onChange: (_2, { value }) => {
+      setMode(value);
+      updateConfigField("mode", value);
+    }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(RadioList.Option, { value: "overwrite", children: "overwrite" }) }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+    !props.dataInputAppConfig && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button,
+      {
+        appearance: "primary",
+        onClick: () => {
+          props.handleSave(
+            {
+              name,
+              input_type: dataInputType,
+              url: url2,
+              http_headers,
+              excluded_json_paths: getPaths(),
+              enabled: true,
+              cron_expression: cronExpression,
+              selected_output_location,
+              mode,
+              separate_array_paths: separateArrayPaths
+            },
+            clearInputs
+          );
+        },
+        children: "Save Data Input"
+      }
+    )
+  ] });
+};
+const NewKVStoreDataInputForm = ({ dataInputAppConfig, setDataInputAppConfig, onDataFetched, onSuccess, onAddExcludePathRef }) => {
+  const [error, setError] = reactExports.useState(null);
+  const [loading, setLoading] = reactExports.useState(false);
+  const [rawData, setRawData] = reactExports.useState(null);
+  const [filteredData, setFilteredData] = reactExports.useState({});
+  const initialFields = reactExports.useMemo(() => {
+    if (filteredData && Object.keys(filteredData).length > 0) {
+      return Object.keys(filteredData);
+    } else if (rawData && Object.keys(rawData).length > 0) {
+      return Object.keys(rawData);
+    } else {
+      return [];
+    }
+  }, [filteredData, rawData]);
+  const onJSONPathsChange = (jsonPaths) => {
+    if (!rawData) return;
+    const filtered = jsonPaths.length ? removeByJsonPaths(rawData, jsonPaths) : rawData;
+    setFilteredData(filtered);
+    if (onDataFetched) onDataFetched(JSON.stringify(filtered));
+  };
+  async function fetchDataPreview(url2, jsonPaths) {
+    setError(null);
+    setLoading(true);
+    if (onDataFetched) onDataFetched("");
+    try {
+      if (!url2) throw new Error("Please enter a URL");
+      const response = await fetch(url2);
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+      const data = await response.json();
+      setRawData(data);
+      const filtered = jsonPaths.length ? removeByJsonPaths(data, jsonPaths) : data;
+      if (onDataFetched) onDataFetched(JSON.stringify(filtered));
+    } catch (err) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+  const handleSaveDataInput = async (formData, clearInputs) => {
+    if (!formData.name || !formData.url || !formData.input_type || !formData.cron_expression || formData.input_type === "kvstore" && !formData.selected_output_location) {
+      setError("Not all required fields are filled out");
+      return;
+    }
+    if (formData.input_type === "kvstore") {
+      try {
+        await addNewDataInputToKVStore(formData);
+        setError(null);
+        if (onSuccess) onSuccess();
+        if (clearInputs) clearInputs();
+      } catch {
+        setError("Failed to save data input to KV Store");
+      }
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    error && /* @__PURE__ */ jsxRuntimeExports.jsx(Message, { style: { marginBottom: "10px" }, appearance: "fill", type: "error", children: error }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(KVStoreDataForm, { dataInputAppConfig, setDataInputAppConfig, fetchDataPreview, setJsonPreview: onDataFetched, fieldsForKvStoreCreation: initialFields, loading, handleSave: handleSaveDataInput, setError, onJSONPathsChange, onAddExcludePathRef, rawData })
+  ] });
+};
+var HeadingExports = requireHeading();
+const Heading = /* @__PURE__ */ getDefaultExportFromCjs(HeadingExports);
+const TreeContainer = qe.div`
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+`;
+const NodeRow = qe.div`
+    padding-left: ${(props) => props.$depth * 16}px;
+    display: flex;
+    align-items: flex-start;
+`;
+const ExpandButton = qe.span`
+    cursor: pointer;
+    user-select: none;
+    width: 16px;
+    display: inline-block;
+    color: #666;
+    &:hover {
+        color: #000;
+    }
+`;
+const KeySpan = qe.span`
+    color: #881391;
+    cursor: ${(props) => props.$clickable ? "pointer" : "default"};
+    border-radius: 3px;
+    padding: 0 2px;
+
+    ${(props) => props.$clickable && `
+        &:hover {
+            background-color: #e8f4fc;
+            text-decoration: underline;
+        }
+    `}
+`;
+const ValueSpan = qe.span`
+    color: ${(props) => {
+  switch (props.$type) {
+    case "string":
+      return "#c41a16";
+    case "number":
+      return "#1c00cf";
+    case "boolean":
+      return "#0d22aa";
+    case "null":
+      return "#808080";
+    default:
+      return "#000";
+  }
+}};
+`;
+const BracketSpan = qe.span`
+    color: #000;
+`;
+const ArrayIndexSpan = qe.span`
+    color: #666;
+    cursor: ${(props) => props.$clickable ? "pointer" : "default"};
+    border-radius: 3px;
+    padding: 0 2px;
+
+    ${(props) => props.$clickable && `
+        &:hover {
+            background-color: #e8f4fc;
+            text-decoration: underline;
+        }
+    `}
+`;
+const Tooltip$1 = qe.div`
+    position: fixed;
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    z-index: 1000;
+    pointer-events: none;
+`;
+const JSONNode = ({ keyName, value, path, depth, onPathClick, isArrayItem }) => {
+  const [expanded, setExpanded] = reactExports.useState(true);
+  const [tooltip, setTooltip] = reactExports.useState(null);
+  const isObject = value !== null && typeof value === "object" && !Array.isArray(value);
+  const isArray = Array.isArray(value);
+  const hasChildren = isObject || isArray;
+  const handleKeyClick = (e2) => {
+    e2.stopPropagation();
+    if (onPathClick && path) {
+      onPathClick(path);
+    }
+  };
+  const handleMouseEnter = (e2) => {
+    if (path && onPathClick) {
+      setTooltip({
+        x: e2.clientX + 10,
+        y: e2.clientY + 10,
+        text: `Click to exclude: ${path}`
+      });
+    }
+  };
+  const handleMouseLeave = () => {
+    setTooltip(null);
+  };
+  const handleMouseMove = (e2) => {
+    if (tooltip) {
+      setTooltip({
+        ...tooltip,
+        x: e2.clientX + 10,
+        y: e2.clientY + 10
+      });
+    }
+  };
+  const renderValue = () => {
+    if (value === null) {
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(ValueSpan, { $type: "null", children: "null" });
+    }
+    if (typeof value === "string") {
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs(ValueSpan, { $type: "string", children: [
+        '"',
+        value,
+        '"'
+      ] });
+    }
+    if (typeof value === "number") {
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(ValueSpan, { $type: "number", children: value });
+    }
+    if (typeof value === "boolean") {
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(ValueSpan, { $type: "boolean", children: value.toString() });
+    }
+    return null;
+  };
+  const renderKey = () => {
+    if (keyName === null) return null;
+    if (isArrayItem) {
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        ArrayIndexSpan,
+        {
+          $clickable: !!onPathClick,
+          onClick: handleKeyClick,
+          onMouseEnter: handleMouseEnter,
+          onMouseLeave: handleMouseLeave,
+          onMouseMove: handleMouseMove,
+          children: [
+            "[",
+            keyName,
+            "]"
+          ]
+        }
+      );
+    }
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        KeySpan,
+        {
+          $clickable: !!onPathClick,
+          onClick: handleKeyClick,
+          onMouseEnter: handleMouseEnter,
+          onMouseLeave: handleMouseLeave,
+          onMouseMove: handleMouseMove,
+          children: [
+            '"',
+            keyName,
+            '"'
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: ": " })
+    ] });
+  };
+  if (!hasChildren) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(NodeRow, { $depth: depth, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandButton, { children: " " }),
+      renderKey(),
+      renderValue(),
+      tooltip && /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip$1, { style: { left: tooltip.x, top: tooltip.y }, children: tooltip.text })
+    ] });
+  }
+  const children = isArray ? value : Object.entries(value);
+  const isEmpty = isArray ? value.length === 0 : Object.keys(value).length === 0;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(NodeRow, { $depth: depth, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandButton, { onClick: () => setExpanded(!expanded), children: isEmpty ? " " : expanded ? "▼" : "▶" }),
+      renderKey(),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(BracketSpan, { children: isArray ? "[" : "{" }),
+      !expanded && /* @__PURE__ */ jsxRuntimeExports.jsx(BracketSpan, { children: "..." }),
+      (!expanded || isEmpty) && /* @__PURE__ */ jsxRuntimeExports.jsx(BracketSpan, { children: isArray ? "]" : "}" }),
+      tooltip && /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip$1, { style: { left: tooltip.x, top: tooltip.y }, children: tooltip.text })
+    ] }),
+    expanded && !isEmpty && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      isArray ? children.map((item, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        JSONNode,
+        {
+          keyName: index,
+          value: item,
+          path: `${path}[${index}]`,
+          depth: depth + 1,
+          onPathClick,
+          isArrayItem: true
+        },
+        index
+      )) : children.map(([key2, val]) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        JSONNode,
+        {
+          keyName: key2,
+          value: val,
+          path: path ? `${path}.${key2}` : `$.${key2}`,
+          depth: depth + 1,
+          onPathClick
+        },
+        key2
+      )),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(NodeRow, { $depth: depth, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandButton, { children: " " }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(BracketSpan, { children: isArray ? "]" : "}" })
+      ] })
+    ] })
+  ] });
+};
+const ClickableJSONTree = ({ data, onPathClick }) => {
+  if (data === null || data === void 0) {
+    return null;
+  }
+  const isArray = Array.isArray(data);
+  const isObject = typeof data === "object" && !isArray;
+  if (!isArray && !isObject) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(TreeContainer, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(JSONNode, { keyName: null, value: data, path: "$", depth: 0, onPathClick }) });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TreeContainer, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(JSONNode, { keyName: null, value: data, path: "$", depth: 0, onPathClick }) });
+};
+function JSONViewer({ initialData, onPathClick }) {
+  const { parsedJSON, isValidJSON } = reactExports.useMemo(() => {
+    if (!initialData) return { parsedJSON: null, isValidJSON: true };
+    try {
+      const parsed = JSON.parse(initialData);
+      return { parsedJSON: parsed, isValidJSON: true };
+    } catch {
+      return { parsedJSON: null, isValidJSON: false };
+    }
+  }, [initialData]);
+  const JSONTreeMemo = reactExports.useMemo(() => {
+    return parsedJSON ? /* @__PURE__ */ jsxRuntimeExports.jsx(ClickableJSONTree, { data: parsedJSON, onPathClick }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Message, { type: "info", children: "Fetch data to see preview. Click on any key to add it to exclusions." });
+  }, [parsedJSON, onPathClick]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Heading, { level: 2, children: "Preview" }),
+    onPathClick && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: "12px", color: "#666", marginBottom: "10px" }, children: "Click on any key to add it to the exclude list" }),
+    isValidJSON ? JSONTreeMemo : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { color: "error", style: { marginTop: 1, textAlign: "center" }, children: "Invalid JSON data provided." })
+  ] });
+}
+var MessageBar$1 = { exports: {} };
+var hasRequiredMessageBar;
+function requireMessageBar() {
+  if (hasRequiredMessageBar) return MessageBar$1.exports;
+  hasRequiredMessageBar = 1;
+  (() => {
+    var e2 = {};
+    (() => {
+      e2.n = (r3) => {
+        var n3 = r3 && r3.__esModule ? (
+          /******/
+          () => r3["default"]
+        ) : () => r3;
+        e2.d(n3, {
+          a: n3
+        });
+        return n3;
+      };
+    })();
+    (() => {
+      e2.d = (r3, n3) => {
+        for (var t3 in n3) {
+          if (e2.o(n3, t3) && !e2.o(r3, t3)) {
+            Object.defineProperty(r3, t3, {
+              enumerable: true,
+              get: n3[t3]
+            });
+          }
+        }
+      };
+    })();
+    (() => {
+      e2.o = (e3, r3) => Object.prototype.hasOwnProperty.call(e3, r3);
+    })();
+    (() => {
+      e2.r = (e3) => {
+        if (typeof Symbol !== "undefined" && Symbol.toStringTag) {
+          Object.defineProperty(e3, Symbol.toStringTag, {
+            value: "Module"
+          });
+        }
+        Object.defineProperty(e3, "__esModule", {
+          value: true
+        });
+      };
+    })();
+    var r2 = {};
+    e2.r(r2);
+    e2.d(r2, {
+      default: () => (
+        /* reexport */
+        B2
+      )
+    });
+    const n2 = requireReact();
+    var t2 = e2.n(n2);
+    const a2 = /* @__PURE__ */ requirePropTypes();
+    var i2 = e2.n(a2);
+    const o2 = requireCheckCircle();
+    var s2 = e2.n(o2);
+    const l2 = requireCross();
+    var c2 = e2.n(l2);
+    const u2 = requireExclamationTriangle();
+    var p2 = e2.n(u2);
+    const d2 = requireInformationCircle();
+    var f2 = e2.n(d2);
+    const v2 = requireInformationDiamond();
+    var g2 = e2.n(v2);
+    const m2 = requireScreenReaderContent();
+    var y2 = e2.n(m2);
+    const b2 = requireI18n();
+    const C2 = require$$21;
+    var h2 = e2.n(C2);
+    const w2 = requireButton();
+    var S2 = e2.n(w2);
+    const k2 = requireThemes();
+    var q2 = h2().div.withConfig({
+      displayName: "MessageBarStyles__MessageBarContent",
+      componentId: "sc-1uyhzza-0"
+    })(["", ";", ";grid-column:content;grid-row:1 / -1;max-width:", ";word-wrap:break-word;"], k2.mixins.reset("inline"), k2.mixins.typography("body"), k2.variables.lineLength);
+    var _2 = h2()(S2()).withConfig({
+      displayName: "MessageBarStyles__StyledCloseButton",
+      componentId: "sc-1uyhzza-1"
+    })(["grid-column:close;"]);
+    var O2 = h2().span.withConfig({
+      displayName: "MessageBarStyles__StyledIcon",
+      componentId: "sc-1uyhzza-2"
+    })(["width:20px;height:20px;margin-left:auto;fill:", ";grid-row:1;grid-column:icon;"], (0, k2.pickVariant)("$type", {
+      info: k2.variables.notificationColorInfo,
+      success: k2.variables.notificationColorPositive,
+      warning: k2.variables.notificationColorCaution,
+      error: k2.variables.notificationColorNegative
+    }));
+    var I2 = h2().div.withConfig({
+      displayName: "MessageBarStyles__MessageBarWrapper",
+      componentId: "sc-1uyhzza-3"
+    })(["", ";grid-template-columns:[icon] 20px ", " [content] fit-content(", ") minmax(", ",1fr) [close] min-content;grid-template-rows:1lh auto;align-items:center;border:1px solid ", ";border-radius:", ";background-color:", ";padding:", " ", ";width:100%;"], k2.mixins.reset("grid"), k2.variables.spacingSmall, k2.variables.lineLength, k2.variables.spacingSmall, (0, k2.pickVariant)("$type", {
+      info: k2.variables.notificationColorInfoStrong,
+      success: k2.variables.notificationColorPositiveStrong,
+      warning: k2.variables.notificationColorCautionStrong,
+      error: k2.variables.notificationColorNegativeStrong
+    }), k2.variables.borderRadius, (0, k2.pickVariant)("$type", {
+      info: k2.variables.notificationColorInfoWeak,
+      success: k2.variables.notificationColorPositiveWeak,
+      warning: k2.variables.notificationColorCautionWeak,
+      error: k2.variables.notificationColorNegativeWeak
+    }), k2.variables.spacingSmall, k2.variables.spacingMedium);
+    function x2() {
+      return x2 = Object.assign ? Object.assign.bind() : function(e3) {
+        for (var r3 = 1; r3 < arguments.length; r3++) {
+          var n3 = arguments[r3];
+          for (var t3 in n3) {
+            ({}).hasOwnProperty.call(n3, t3) && (e3[t3] = n3[t3]);
+          }
+        }
+        return e3;
+      }, x2.apply(null, arguments);
+    }
+    function P2(e3, r3) {
+      if (null == e3) return {};
+      var n3, t3, a3 = j2(e3, r3);
+      if (Object.getOwnPropertySymbols) {
+        var i3 = Object.getOwnPropertySymbols(e3);
+        for (t3 = 0; t3 < i3.length; t3++) {
+          n3 = i3[t3], r3.includes(n3) || {}.propertyIsEnumerable.call(e3, n3) && (a3[n3] = e3[n3]);
+        }
+      }
+      return a3;
+    }
+    function j2(e3, r3) {
+      if (null == e3) return {};
+      var n3 = {};
+      for (var t3 in e3) {
+        if ({}.hasOwnProperty.call(e3, t3)) {
+          if (r3.includes(t3)) continue;
+          n3[t3] = e3[t3];
+        }
+      }
+      return n3;
+    }
+    var z2 = {
+      children: i2().node.isRequired,
+      onRequestClose: i2().func,
+      type: i2().oneOf(["info", "success", "warning", "error"]).isRequired
+    };
+    var M2 = Object.freeze({
+      info: (0, b2._)("Info"),
+      warning: (0, b2._)("Warning"),
+      error: (0, b2._)("Alert"),
+      success: (0, b2._)("Success")
+    });
+    var E2 = Object.freeze({
+      info: f2(),
+      warning: g2(),
+      error: p2(),
+      success: s2()
+    });
+    function R2(e3) {
+      var r3 = e3.children, n3 = e3.elementRef, a3 = e3.onRequestClose, i3 = e3.type, o3 = P2(e3, ["children", "elementRef", "onRequestClose", "type"]);
+      var s3 = E2[i3];
+      var l3 = M2[i3];
+      return t2().createElement(I2, x2({
+        ref: n3,
+        $type: i3,
+        "data-test": "message-bar",
+        "data-test-type": i3
+      }, o3, {
+        role: "region"
+      }), t2().createElement(O2, {
+        as: s3,
+        $type: i3,
+        variant: "filled",
+        "aria-hidden": true,
+        "data-test": "icon"
+      }), t2().createElement(y2(), null, l3), t2().createElement(q2, {
+        "data-test": "content"
+      }, r3), a3 && t2().createElement(_2, {
+        appearance: "subtle",
+        onClick: a3
+      }, t2().createElement(c2(), null), t2().createElement(y2(), null, (0, b2._)("Close"))));
+    }
+    R2.propTypes = z2;
+    const B2 = R2;
+    MessageBar$1.exports = r2;
+  })();
+  return MessageBar$1.exports;
+}
+var MessageBarExports = requireMessageBar();
+const MessageBar = /* @__PURE__ */ getDefaultExportFromCjs(MessageBarExports);
+var idExports = requireId();
 const errorToString = (error) => {
   if (error instanceof Error) {
     return error.message;
@@ -51740,54 +52356,364 @@ const NewIndexForm = ({ onCreate, open, onClose, modalToggle }) => {
     }
   );
 };
-const NewIndexInput = () => {
-  const [indexName, setIndexName] = reactExports.useState("");
-  const [showCreateIndexModal, setShowCreateIndexModal] = reactExports.useState(false);
+const IndexDataForm = (props) => {
+  const config2 = props.dataInputAppConfig || {};
   const modalToggle = React.useRef(null);
+  const previewModalToggle = React.useRef(null);
   const [indexNames, setIndexNames] = reactExports.useState([]);
-  const fetchIndexes = async () => {
+  const [showCreateIndexModal, setShowCreateIndexModal] = reactExports.useState(false);
+  const [showPreviewModal, setShowPreviewModal] = reactExports.useState(false);
+  const [name, setInputName] = reactExports.useState(config2.name ?? "");
+  const [dataInputType] = reactExports.useState("index");
+  const [url2, setUrl] = reactExports.useState(config2.url ?? "https://dummyjson.com/products");
+  const [http_headers, setHttpHeaders] = reactExports.useState(config2.http_headers ?? [""]);
+  const [cronExpression, setCronExpression] = reactExports.useState(config2.cron_expression ?? "0 * * * *");
+  const [selected_output_location, setSelectedIndex] = reactExports.useState(config2.selected_output_location ?? "");
+  const [mode, setMode] = reactExports.useState(config2.mode ?? "overwrite");
+  const [separateArrayPaths, setSeparateArrayPaths] = reactExports.useState(config2.separate_array_paths ?? []);
+  const updateConfigField = (key2, value) => {
+    if (props.setDataInputAppConfig) {
+      props.setDataInputAppConfig((prev) => ({
+        ...prev,
+        [key2]: value
+      }));
+    }
+  };
+  const [jsonPathValues, setJsonPathValues] = reactExports.useState(
+    config2.excluded_json_paths && config2.excluded_json_paths.length > 0 ? config2.excluded_json_paths : [""]
+  );
+  React.useEffect(() => {
+    getAllIndexNames().then((result) => {
+      setIndexNames(result);
+    });
+  }, []);
+  React.useEffect(() => {
+    if (props.onAddExcludePathRef) {
+      props.onAddExcludePathRef((path) => {
+        setJsonPathValues((prev) => {
+          if (prev.includes(path)) return prev;
+          const updated = prev[0] === "" ? [path] : [...prev, path];
+          props.onJSONPathsChange(updated.filter(Boolean));
+          updateConfigField("excluded_json_paths", updated.filter(Boolean));
+          return updated;
+        });
+      });
+    }
+  }, [props.onAddExcludePathRef]);
+  const handleNewJsonPathExclusion = () => {
+    setJsonPathValues((prev) => {
+      const updated = [...prev, ""];
+      props.onJSONPathsChange(updated.filter(Boolean));
+      updateConfigField("excluded_json_paths", updated.filter(Boolean));
+      return updated;
+    });
+  };
+  const handleRemoveJsonPathRow = (index) => {
+    if (index === 0) return;
+    setJsonPathValues((prev) => {
+      if (prev.length === 1) return prev;
+      const updated = prev.filter((_2, i2) => i2 !== index);
+      props.onJSONPathsChange(updated.filter(Boolean));
+      updateConfigField("excluded_json_paths", updated.filter(Boolean));
+      return updated;
+    });
+  };
+  const handleJsonPathTextChange = (value, { index }) => {
+    setJsonPathValues((prev) => {
+      const updated = prev.map((v2, i2) => i2 === index ? value : v2);
+      props.onJSONPathsChange(updated.filter(Boolean));
+      updateConfigField("excluded_json_paths", updated.filter(Boolean));
+      return updated;
+    });
+  };
+  const controlledJsonPathRows = jsonPathValues.map((value, i2) => /* @__PURE__ */ jsxRuntimeExports.jsx(FormRows.Row, { index: i2, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex" }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flexGrow: 1, marginRight: "8px", minWidth: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Text,
+      {
+        style: { width: "100%", minWidth: i2 === 0 ? "577px" : "542px", fontSize: "1.1em" },
+        placeholder: "e.g. $.bar[*].baz",
+        value,
+        onChange: (_2, { value: value2 }) => handleJsonPathTextChange(value2, { index: i2 })
+      }
+    ) }),
+    i2 !== 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button,
+      {
+        inline: true,
+        appearance: "secondary",
+        onClick: () => handleRemoveJsonPathRow(i2),
+        label: "",
+        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(TrashCanCross, {})
+      }
+    )
+  ] }) }, i2));
+  const handleNewHttpHeader = () => {
+    setHttpHeaders((prev) => [...prev, ""]);
+  };
+  const handleRemoveHttpHeader = (index) => {
+    if (index === 0) return;
+    setHttpHeaders((prev) => {
+      if (prev.length === 1) return prev;
+      return prev.filter((_2, i2) => i2 !== index);
+    });
+  };
+  const handleHttpHeaderTextChange = (value, { index }) => {
+    setHttpHeaders((prev) => {
+      const updated = prev.map((v2, i2) => i2 === index ? value : v2);
+      updateConfigField("http_headers", updated.filter(Boolean));
+      return updated;
+    });
+  };
+  const controlledHttpHeaderRows = http_headers.map((value, i2) => /* @__PURE__ */ jsxRuntimeExports.jsx(FormRows.Row, { index: i2, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flexGrow: 1, marginRight: "8px", minWidth: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Text,
+      {
+        style: { width: "100%", minWidth: i2 === 0 ? "577px" : "542px", fontSize: "1.1em" },
+        placeholder: "Header: Value",
+        value,
+        onChange: (_2, { value: value2 }) => handleHttpHeaderTextChange(value2, { index: i2 })
+      }
+    ) }),
+    i2 !== 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button,
+      {
+        inline: true,
+        appearance: "secondary",
+        onClick: () => handleRemoveHttpHeader(i2),
+        label: "",
+        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(TrashCanCross, {})
+      }
+    )
+  ] }) }, i2));
+  const getPaths = () => jsonPathValues.filter(Boolean);
+  const clearInputs = () => {
+    setInputName("");
+    setUrl("https://dummyjson.com/products");
+    setCronExpression("0 * * * *");
+    setSelectedIndex("");
+    setMode("overwrite");
+    setJsonPathValues([""]);
+    setHttpHeaders([""]);
+    setSeparateArrayPaths([]);
+    props.onJSONPathsChange([]);
+    props.setJsonPreview && props.setJsonPreview("");
+  };
+  const handleOnCreateIndex = async (createdIndexName) => {
     const names = await getAllIndexNames();
     setIndexNames(names);
+    setSelectedIndex(createdIndexName);
   };
-  reactExports.useEffect(() => {
-    fetchIndexes();
-  }, []);
-  const handleOnCreateIndex = async (createdIndexName) => {
-    await fetchIndexes();
-    setIndexName(createdIndexName);
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(ControlGroup, { label: "Select Index:", required: true, children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Input Name:", required: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Text,
+      {
+        value: name,
+        onChange: (_2, { value }) => {
+          updateConfigField("name", value);
+          setInputName(value);
+        },
+        placeholder: "Enter input name",
+        required: true,
+        canClear: true
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(ControlGroup, { label: "API URL:", required: true, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Select,
+        Text,
         {
-          value: indexName,
+          value: url2,
           onChange: (_2, { value }) => {
-            setIndexName(String(value));
+            updateConfigField("url", value);
+            setUrl(value);
           },
-          filter: true,
-          placeholder: "Select an index",
-          style: { flex: 1, minWidth: "400px" },
-          children: indexNames.map((index) => /* @__PURE__ */ jsxRuntimeExports.jsx(Select.Option, { value: index, label: index }, index))
+          disabled: props.loading,
+          canClear: true,
+          required: true
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         Button,
         {
-          appearance: "secondary",
-          onClick: () => setShowCreateIndexModal(true),
-          elementRef: modalToggle,
-          children: "Create New Index"
+          type: "submit",
+          disabled: props.loading,
+          onClick: () => props.fetchDataPreview(url2, getPaths()),
+          children: props.loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(WaitSpinner, { size: "medium" }) : "Fetch"
         }
       )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "HTTP Headers", tooltip: "Add one or more HTTP headers in the format 'Header: Value'", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      FormRows,
+      {
+        onRequestAdd: handleNewHttpHeader,
+        addLabel: "Add HTTP Header",
+        children: controlledHttpHeaderRows
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Cron Expression:", required: true, tooltip: "Cron expression for scheduling data input", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Text,
+      {
+        value: cronExpression,
+        onChange: (_2, { value }) => {
+          updateConfigField("cron_expression", value);
+          setCronExpression(value);
+        },
+        placeholder: "0 * * * *",
+        required: true
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Exclude JSONPaths", tooltip: "Provide one or more JSONPath expressions to exclude fields from the JSON.", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      FormRows,
+      {
+        onRequestAdd: handleNewJsonPathExclusion,
+        addLabel: "Add Exclude JSONPath",
+        children: controlledJsonPathRows
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ControlGroup, { label: "Separate Arrays as Events", tooltip: "Select which arrays should be split into separate events. Each array item will become its own event in Splunk.", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { width: "100%" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ArrayFieldSelector,
+        {
+          data: props.rawData,
+          selectedPaths: separateArrayPaths,
+          onSelectionChange: (paths) => {
+            setSeparateArrayPaths(paths);
+            updateConfigField("separate_array_paths", paths);
+          }
+        }
+      ),
+      !!props.rawData && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          appearance: "secondary",
+          onClick: () => setShowPreviewModal(true),
+          elementRef: previewModalToggle,
+          style: { marginTop: "12px" },
+          children: "Preview Events"
+        }
+      )
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      EventPreviewModal,
+      {
+        open: showPreviewModal,
+        onClose: () => setShowPreviewModal(false),
+        data: props.rawData,
+        separateArrayPaths,
+        modalToggle: previewModalToggle
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(ControlGroup, { label: "Select Index:", required: true, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Select,
+        {
+          value: selected_output_location,
+          onChange: (_2, { value }) => {
+            updateConfigField("selected_output_location", String(value));
+            setSelectedIndex(String(value));
+          },
+          filter: true,
+          placeholder: "Select an index...",
+          style: { flex: 1, minWidth: "400px" },
+          children: indexNames.map((indexName) => /* @__PURE__ */ jsxRuntimeExports.jsx(Select.Option, { value: indexName, label: indexName }, indexName))
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { appearance: "secondary", onClick: () => setShowCreateIndexModal(true), elementRef: modalToggle, children: "Create New Index" })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       NewIndexForm,
       {
-        onCreate: handleOnCreateIndex,
         open: showCreateIndexModal,
         onClose: () => setShowCreateIndexModal(false),
+        onCreate: handleOnCreateIndex,
         modalToggle
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+    !props.dataInputAppConfig && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button,
+      {
+        appearance: "primary",
+        onClick: () => {
+          props.handleSave(
+            {
+              name,
+              input_type: dataInputType,
+              url: url2,
+              http_headers,
+              excluded_json_paths: getPaths(),
+              enabled: true,
+              cron_expression: cronExpression,
+              selected_output_location,
+              mode,
+              separate_array_paths: separateArrayPaths
+            },
+            clearInputs
+          );
+        },
+        children: "Save Data Input"
+      }
+    )
+  ] });
+};
+const NewIndexDataInputForm = ({ dataInputAppConfig, setDataInputAppConfig, onDataFetched, onSuccess, onAddExcludePathRef }) => {
+  const [error, setError] = reactExports.useState(null);
+  const [loading, setLoading] = reactExports.useState(false);
+  const [rawData, setRawData] = reactExports.useState(null);
+  const onJSONPathsChange = (jsonPaths) => {
+    if (!rawData) return;
+    const filtered = jsonPaths.length ? removeByJsonPaths(rawData, jsonPaths) : rawData;
+    if (onDataFetched) onDataFetched(JSON.stringify(filtered));
+  };
+  async function fetchDataPreview(url2, jsonPaths) {
+    setError(null);
+    setLoading(true);
+    if (onDataFetched) onDataFetched("");
+    try {
+      if (!url2) throw new Error("Please enter a URL");
+      const response = await fetch(url2);
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+      const data = await response.json();
+      setRawData(data);
+      const filtered = jsonPaths.length ? removeByJsonPaths(data, jsonPaths) : data;
+      if (onDataFetched) onDataFetched(JSON.stringify(filtered));
+    } catch (err) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+  const handleSaveDataInput = async (formData, clearInputs) => {
+    if (!formData.name || !formData.url || !formData.input_type || !formData.cron_expression || !formData.selected_output_location) {
+      setError("Not all required fields are filled out");
+      return;
+    }
+    try {
+      await addNewDataInputToIndex(formData);
+      setError(null);
+      if (onSuccess) onSuccess();
+      if (clearInputs) clearInputs();
+    } catch {
+      setError("Failed to save data input configuration");
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    error && /* @__PURE__ */ jsxRuntimeExports.jsx(Message, { style: { marginBottom: "10px" }, appearance: "fill", type: "error", children: error }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      IndexDataForm,
+      {
+        dataInputAppConfig,
+        setDataInputAppConfig,
+        fetchDataPreview,
+        setJsonPreview: onDataFetched,
+        loading,
+        handleSave: handleSaveDataInput,
+        setError,
+        onJSONPathsChange,
+        onAddExcludePathRef,
+        rawData
       }
     )
   ] });
@@ -51797,6 +52723,12 @@ function NewDataInput() {
   const [successMessage, setSuccessMessage] = reactExports.useState(null);
   const [activeTabId, setActiveTabId] = reactExports.useState("kvstore");
   const headingId = idExports.createDOMID("data-input-success");
+  const addExcludePathRef = reactExports.useRef(null);
+  const handlePathClick = reactExports.useCallback((path) => {
+    if (addExcludePathRef.current) {
+      addExcludePathRef.current(path);
+    }
+  }, []);
   const handleTabChange = reactExports.useCallback(
     (_2, { selectedTabId }) => {
       if (selectedTabId) {
@@ -51827,12 +52759,26 @@ function NewDataInput() {
           onDataFetched: (data) => {
             setJsonData(data);
           },
-          onSuccess: () => setSuccessMessage("Successfully added data input to KV Store.")
+          onSuccess: () => setSuccessMessage("Successfully added data input to KV Store."),
+          onAddExcludePathRef: (fn) => {
+            addExcludePathRef.current = fn;
+          }
         }
       ),
-      activeTabId === "index" && /* @__PURE__ */ jsxRuntimeExports.jsx(NewIndexInput, {})
+      activeTabId === "index" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        NewIndexDataInputForm,
+        {
+          onDataFetched: (data) => {
+            setJsonData(data);
+          },
+          onSuccess: () => setSuccessMessage("Successfully added data input for Index."),
+          onAddExcludePathRef: (fn) => {
+            addExcludePathRef.current = fn;
+          }
+        }
+      )
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { span: 6, children: /* @__PURE__ */ jsxRuntimeExports.jsx(JSONViewer, { initialData: jsonData }) })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { span: 6, children: /* @__PURE__ */ jsxRuntimeExports.jsx(JSONViewer, { initialData: jsonData, onPathClick: handlePathClick }) })
   ] }) });
 }
 var Pencil$1 = { exports: {} };
@@ -56571,6 +57517,12 @@ var MenuExports = requireMenu();
 const Menu = /* @__PURE__ */ getDefaultExportFromCjs(MenuExports);
 function EditKVStorePage({ dataInputAppConfig, setDataInputAppConfig, onSuccess }) {
   const [jsonData, setJsonData] = reactExports.useState("");
+  const addExcludePathRef = reactExports.useRef(null);
+  const handlePathClick = reactExports.useCallback((path) => {
+    if (addExcludePathRef.current) {
+      addExcludePathRef.current(path);
+    }
+  }, []);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout, { gutter: 100, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ColumnLayout.Row, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { span: 6, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       NewKVStoreDataInputForm,
@@ -56580,10 +57532,13 @@ function EditKVStorePage({ dataInputAppConfig, setDataInputAppConfig, onSuccess 
         onDataFetched: (data) => {
           setJsonData(data);
         },
-        onSuccess
+        onSuccess,
+        onAddExcludePathRef: (fn) => {
+          addExcludePathRef.current = fn;
+        }
       }
     ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { span: 6, children: /* @__PURE__ */ jsxRuntimeExports.jsx(JSONViewer, { initialData: jsonData }) })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { span: 6, children: /* @__PURE__ */ jsxRuntimeExports.jsx(JSONViewer, { initialData: jsonData, onPathClick: handlePathClick }) })
   ] }) });
 }
 const EditKVStoreInputModal = ({ id: id2, open, modalToggle, onClose, onSuccess }) => {
@@ -56629,7 +57584,85 @@ const EditKVStoreInputModal = ({ id: id2, open, modalToggle, onClose, onSuccess 
       style: { width: "90vw", height: "90vh" },
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Modal.Header, { title: "Edit KV Store Input" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Modal.Body, { style: { height: "100%" }, children: error ? /* @__PURE__ */ jsxRuntimeExports.jsx(Message, { type: "error", children: error }) : /* @__PURE__ */ jsxRuntimeExports.jsx(EditKVStorePage, { dataInputAppConfig: data, setDataInputAppConfig: setData, onSuccess: onClose }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Modal.Body, { style: { height: "100%" }, children: error ? /* @__PURE__ */ jsxRuntimeExports.jsx(Message, { type: "error", children: error }) : data ? /* @__PURE__ */ jsxRuntimeExports.jsx(EditKVStorePage, { dataInputAppConfig: data, setDataInputAppConfig: setData, onSuccess: onClose }) : null }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Modal.Footer, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { appearance: "primary", onClick: handleSave, label: "Save" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { appearance: "secondary", onClick: onClose, label: "Cancel" })
+        ] })
+      ]
+    }
+  );
+};
+function EditIndexPage({ dataInputAppConfig, setDataInputAppConfig, onSuccess }) {
+  const [jsonData, setJsonData] = reactExports.useState("");
+  const addExcludePathRef = reactExports.useRef(null);
+  const handlePathClick = reactExports.useCallback((path) => {
+    if (addExcludePathRef.current) {
+      addExcludePathRef.current(path);
+    }
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout, { gutter: 100, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ColumnLayout.Row, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { span: 6, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      NewIndexDataInputForm,
+      {
+        dataInputAppConfig,
+        setDataInputAppConfig,
+        onDataFetched: (data) => {
+          setJsonData(data);
+        },
+        onSuccess,
+        onAddExcludePathRef: (fn) => {
+          addExcludePathRef.current = fn;
+        }
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { span: 6, children: /* @__PURE__ */ jsxRuntimeExports.jsx(JSONViewer, { initialData: jsonData, onPathClick: handlePathClick }) })
+  ] }) });
+}
+const EditIndexInputModal = ({ id: id2, open, modalToggle, onClose, onSuccess }) => {
+  const [data, setData] = reactExports.useState();
+  const [error, setError] = reactExports.useState(null);
+  reactExports.useEffect(() => {
+    async function fetchData() {
+      try {
+        const result = await getDataInputsConfigById(id2 || "");
+        setError(null);
+        setData(result);
+      } catch {
+        setError("Failed to fetch config");
+      }
+    }
+    if (!id2) {
+      setError("No ID provided for EditIndexInputModal");
+      return;
+    }
+    if (open && id2) {
+      fetchData();
+    }
+  }, [id2, open]);
+  const handleSave = async () => {
+    if (data) {
+      try {
+        console.log("Saving data input config:", data);
+        await updateDataInputConfigById(data);
+        setError(null);
+        if (onSuccess) onSuccess();
+        onClose();
+      } catch {
+        setError("Failed to update config");
+      }
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Modal,
+    {
+      returnFocus: modalToggle,
+      onRequestClose: onClose,
+      open,
+      style: { width: "90vw", height: "90vh" },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Modal.Header, { title: "Edit Index Input" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Modal.Body, { style: { height: "100%" }, children: error ? /* @__PURE__ */ jsxRuntimeExports.jsx(Message, { type: "error", children: error }) : /* @__PURE__ */ jsxRuntimeExports.jsx(EditIndexPage, { dataInputAppConfig: data, setDataInputAppConfig: setData, onSuccess: onClose }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(Modal.Footer, { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { appearance: "primary", onClick: handleSave, label: "Save" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { appearance: "secondary", onClick: onClose, label: "Cancel" })
@@ -56663,6 +57696,11 @@ function ManageDataInputsTable() {
       const url2 = `search?earliest=0&latest=&q=%7C%20inputlookup%20${encodeURIComponent(collection)}`;
       const newPath = window.location.pathname.replace(/\/[^/]+$/, `/${url2}`);
       window.open(newPath, "_blank");
+    } else if (rowData.input_type === "index") {
+      const indexName = rowData.selected_output_location;
+      const url2 = `search?earliest=-24h&latest=now&q=index%3D${encodeURIComponent(indexName)}`;
+      const newPath = window.location.pathname.replace(/\/[^/]+$/, `/${url2}`);
+      window.open(newPath, "_blank");
     } else {
       console.warn("View data action not implemented for input type:", rowData.input_type);
     }
@@ -56682,7 +57720,25 @@ function ManageDataInputsTable() {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Menu.Item, { onClick: handleViewDataActionClick(rowData), children: "View Data" })
   ] });
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(EditKVStoreInputModal, { onSuccess: refreshData, onClose: () => setOpenEditDataInputModal(!openEditDataInputModal), id: selectedItem == null ? void 0 : selectedItem._key, open: openEditDataInputModal, modalToggle }),
+    (selectedItem == null ? void 0 : selectedItem.input_type) === "index" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      EditIndexInputModal,
+      {
+        onSuccess: refreshData,
+        onClose: () => setOpenEditDataInputModal(false),
+        id: selectedItem == null ? void 0 : selectedItem._key,
+        open: openEditDataInputModal,
+        modalToggle
+      }
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+      EditKVStoreInputModal,
+      {
+        onSuccess: refreshData,
+        onClose: () => setOpenEditDataInputModal(false),
+        id: selectedItem == null ? void 0 : selectedItem._key,
+        open: openEditDataInputModal,
+        modalToggle
+      }
+    ),
     /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ColumnLayout.Row, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { span: 10, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Heading, { style: { marginBottom: "10px" }, level: 1, children: "Manage Inputs" }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(ColumnLayout.Column, { style: { textAlign: "right" }, span: 2, children: /* @__PURE__ */ jsxRuntimeExports.jsx(

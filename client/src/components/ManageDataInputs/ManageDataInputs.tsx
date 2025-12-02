@@ -15,6 +15,7 @@ import type { DataInputAppConfig } from './DataInputs.types';
 // import EditDataInputModal from './EditDataInput';
 import React from 'react';
 import EditKVStoreInputModal from './EditKVStoreInputModal';
+import EditIndexInputModal from './EditIndexInputModal';
 
 
 function ManageDataInputsTable() {
@@ -46,6 +47,11 @@ function ManageDataInputsTable() {
             const url = `search?earliest=0&latest=&q=%7C%20inputlookup%20${encodeURIComponent(collection)}`;
             const newPath = window.location.pathname.replace(/\/[^/]+$/, `/${url}`);
             window.open(newPath, '_blank');
+        } else if (rowData.input_type === 'index') {
+            const indexName = rowData.selected_output_location;
+            const url = `search?earliest=-24h&latest=now&q=index%3D${encodeURIComponent(indexName)}`;
+            const newPath = window.location.pathname.replace(/\/[^/]+$/, `/${url}`);
+            window.open(newPath, '_blank');
         } else {
             console.warn('View data action not implemented for input type:', rowData.input_type);
         }
@@ -74,7 +80,23 @@ function ManageDataInputsTable() {
 
     return (
         <div>
-            <EditKVStoreInputModal onSuccess={refreshData} onClose={() => setOpenEditDataInputModal(!openEditDataInputModal)} id={selectedItem?._key} open={openEditDataInputModal} modalToggle={modalToggle} />
+            {selectedItem?.input_type === 'index' ? (
+                <EditIndexInputModal
+                    onSuccess={refreshData}
+                    onClose={() => setOpenEditDataInputModal(false)}
+                    id={selectedItem?._key}
+                    open={openEditDataInputModal}
+                    modalToggle={modalToggle}
+                />
+            ) : (
+                <EditKVStoreInputModal
+                    onSuccess={refreshData}
+                    onClose={() => setOpenEditDataInputModal(false)}
+                    id={selectedItem?._key}
+                    open={openEditDataInputModal}
+                    modalToggle={modalToggle}
+                />
+            )}
             <ColumnLayout>
                 <ColumnLayout.Row><ColumnLayout.Column span={10}>
                     <Heading style={{ marginBottom: "10px" }} level={1}>Manage Inputs</Heading>

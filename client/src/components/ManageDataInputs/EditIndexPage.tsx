@@ -2,16 +2,16 @@ import { useState, useRef, useCallback } from 'react';
 import ColumnLayout from '@splunk/react-ui/ColumnLayout';
 
 import type { DataInputAppConfig } from './DataInputs.types';
-import NewKVStoreDataInputForm from '../DataInputs/KVStore/NewDataInputForm';
+import NewIndexDataInputForm from '../DataInputs/Index/NewIndexDataInputForm';
 import JSONViewer from '../Json/JsonViewer';
 
-interface EditKVStorePageProps {
+interface EditIndexPageProps {
     dataInputAppConfig: DataInputAppConfig;
     setDataInputAppConfig: React.Dispatch<React.SetStateAction<DataInputAppConfig>>;
     onSuccess: () => void;
 }
 
-export default function EditKVStorePage({ dataInputAppConfig, setDataInputAppConfig, onSuccess }: EditKVStorePageProps) {
+export default function EditIndexPage({ dataInputAppConfig, setDataInputAppConfig, onSuccess }: EditIndexPageProps) {
     const [jsonData, setJsonData] = useState<string>('');
     const addExcludePathRef = useRef<((path: string) => void) | null>(null);
 
@@ -25,7 +25,7 @@ export default function EditKVStorePage({ dataInputAppConfig, setDataInputAppCon
         <ColumnLayout gutter={100}>
             <ColumnLayout.Row>
                 <ColumnLayout.Column span={6}>
-                    <NewKVStoreDataInputForm
+                    <NewIndexDataInputForm
                         dataInputAppConfig={dataInputAppConfig}
                         setDataInputAppConfig={setDataInputAppConfig}
                         onDataFetched={(data: string) => {
