@@ -1,9 +1,9 @@
 #!/bin/bash
 
-CONTAINER_NAME="splunk" 
+CONTAINER_NAME=${CONTAINER_NAME:-splunk-dev}
 APP_NAME="api_input_connect"
 SPLUNK_USER="admin"
-SPLUNK_PASS="changeme"
+SPLUNK_PASS=${SPLUNK_PASSWORD:-changeme!}
 
 if [[ "$1" == "--reload-only" ]]; then
   docker exec -u splunk "$CONTAINER_NAME" /opt/splunk/bin/splunk _internal call /services/apps/local/"$APP_NAME"/_reload -auth "$SPLUNK_USER:$SPLUNK_PASS" && \
