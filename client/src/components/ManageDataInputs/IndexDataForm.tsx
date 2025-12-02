@@ -11,6 +11,7 @@ import CreateNewIndex from '../DataInputs/Index/CreateNewIndex';
 import TrashCanCross from '@splunk/react-icons/TrashCanCross';
 import ArrayFieldSelector from '../Json/ArrayFieldSelector';
 import EventPreviewModal from '../Json/EventPreviewModal';
+import Heading from '@splunk/react-ui/Heading';
 
 
 interface IndexDataFormProps {
@@ -243,6 +244,11 @@ const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
 
     return (
         <div>
+            {/* Basic Configuration Section */}
+            <Heading level={2} style={{ marginTop: '0', marginBottom: '20px', paddingBottom: '10px', borderBottom: '2px solid #e0e0e0' }}>
+                Basic Configuration
+            </Heading>
+            
             <ControlGroup label="Input Name:" required>
                 <Text
                     value={name}
@@ -255,6 +261,7 @@ const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
                     canClear
                 />
             </ControlGroup>
+
             <ControlGroup label="API URL:" required>
                 <Text
                     value={url}
@@ -271,6 +278,7 @@ const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
                     {props.loading ? <WaitSpinner size="medium" /> : "Fetch"}
                 </Button>
             </ControlGroup>
+
             <ControlGroup label="HTTP Headers" tooltip="Add one or more HTTP headers in the format 'Header: Value'">
                 <FormRows
                     onRequestAdd={handleNewHttpHeader}
@@ -280,6 +288,11 @@ const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
                 </FormRows>
             </ControlGroup>
 
+            {/* Splunk Configuration Section */}
+            <Heading level={2} style={{ marginTop: '32px', marginBottom: '20px', paddingBottom: '10px', borderBottom: '2px solid #e0e0e0' }}>
+                Splunk Configuration
+            </Heading>
+
             <ControlGroup label="Cron Expression:" required tooltip="Cron expression for scheduling data input">
                 <Text
                     value={cronExpression}
@@ -288,6 +301,35 @@ const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
                     required
                 />
             </ControlGroup>
+
+            <ControlGroup label="Select Index:" required>
+                <Select
+                    value={selected_output_location}
+                    onChange={(_, { value }) => {updateConfigField('selected_output_location', String(value)); setSelectedIndex(String(value))}}
+                    filter
+                    placeholder="Select an index..."
+                    style={{ flex: 1, minWidth: '400px' }}
+                >
+                    {indexNames.map((indexName) => (
+                        <Select.Option value={indexName} key={indexName} label={indexName} />
+                    ))}
+                </Select>
+                <Button appearance="secondary" onClick={() => setShowCreateIndexModal(true)} elementRef={modalToggle}>
+                    Create New Index
+                </Button>
+            </ControlGroup>
+            <CreateNewIndex
+                open={showCreateIndexModal}
+                onClose={() => setShowCreateIndexModal(false)}
+                onCreate={handleOnCreateIndex}
+                modalToggle={modalToggle}
+            />
+
+            {/* Data Processing Section */}
+            <Heading level={2} style={{ marginTop: '32px', marginBottom: '20px', paddingBottom: '10px', borderBottom: '2px solid #e0e0e0' }}>
+                Data Processing
+            </Heading>
+
             <ControlGroup label="Exclude JSONPaths" tooltip="Provide one or more JSONPath expressions to exclude fields from the JSON.">
                 <FormRows
                     onRequestAdd={handleNewJsonPathExclusion}
@@ -328,28 +370,6 @@ const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
                 modalToggle={previewModalToggle}
             />
 
-            <ControlGroup label="Select Index:" required>
-                <Select
-                    value={selected_output_location}
-                    onChange={(_, { value }) => {updateConfigField('selected_output_location', String(value)); setSelectedIndex(String(value))}}
-                    filter
-                    placeholder="Select an index..."
-                    style={{ flex: 1, minWidth: '400px' }}
-                >
-                    {indexNames.map((indexName) => (
-                        <Select.Option value={indexName} key={indexName} label={indexName} />
-                    ))}
-                </Select>
-                <Button appearance="secondary" onClick={() => setShowCreateIndexModal(true)} elementRef={modalToggle}>
-                    Create New Index
-                </Button>
-            </ControlGroup>
-            <CreateNewIndex
-                open={showCreateIndexModal}
-                onClose={() => setShowCreateIndexModal(false)}
-                onCreate={handleOnCreateIndex}
-                modalToggle={modalToggle}
-            />
             <br />
             {/* assume if dataInputAppConfig is passed in save logic is being handled elsewhere (edit mode) */}
             {!props.dataInputAppConfig && (

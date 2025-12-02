@@ -6,13 +6,14 @@ import Select from '@splunk/react-ui/Select';
 import Button from '@splunk/react-ui/Button';
 import WaitSpinner from '@splunk/react-ui/WaitSpinner';
 import FormRows from '@splunk/react-ui/FormRows';
-import { createNewKVStoreCollection, getAllCollectionNames, type KVStoreCollection } from '../../utils/splunk';
+import { getAllCollectionNames, type KVStoreCollection } from '../../utils/splunk';
 import NewKVStoreForm from '../DataInputs/KVStore/NewKVStoreForm';
 import { generateSelectedOutputString } from '../../utils/dataInputUtils';
 import RadioList from '@splunk/react-ui/RadioList';
 import TrashCanCross from '@splunk/react-icons/TrashCanCross';
 import ArrayFieldSelector from '../Json/ArrayFieldSelector';
 import EventPreviewModal from '../Json/EventPreviewModal';
+import Heading from '@splunk/react-ui/Heading';
 
 
 interface KVStoreDataFormProps {
@@ -34,7 +35,7 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
     const modalToggle = React.useRef<HTMLButtonElement | null>(null);
     const previewModalToggle = React.useRef<HTMLButtonElement | null>(null);
     const [collectionNames, setCollectionNames] = useState<KVStoreCollection[]>([]);
-    const [showCreateKVModal, setShowCreateKVModal] = useState(false);
+    const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     const [name, setInputName] = useState(config.name ?? '');
@@ -216,6 +217,24 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
 
     // Collect JSONPath values from all Text fields in rows
     const getPaths = () => jsonPathValues.filter(Boolean);
+    const handleOnCreateCollection = async (createdCollectionName: string, appName: string) => {
+        // Optimistically add the new collection to the list immediately
+        setCollectionNames(prev => {
+            const newCollection = { name: createdCollectionName, app: appName };
+            const exists = prev.some(c => c.name === createdCollectionName && c.app === appName);
+            if (exists) return prev;
+            return [...prev, newCollection].sort((a, b) => a.name.localeCompare(b.name));
+        });
+        const selectedOutput = generateSelectedOutputString(appName, createdCollectionName);
+        setSelectedCollection(selectedOutput);
+        updateConfigField('selected_output_location', selectedOutput);
+
+        // Refresh the list from the server in the background
+        getAllCollectionNames().then(names => {
+            setCollectionNames(names);
+        });
+    };
+
     // Function to clear all input fields
     const clearInputs = () => {
         setInputName('');
@@ -233,6 +252,11 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
 
     return (
         <div>
+            {/* Basic Configuration Section */}
+            <Heading level={2} style={{ marginTop: '0', marginBottom: '20px', paddingBottom: '10px', borderBottom: '2px solid #e0e0e0' }}>
+                Basic Configuration
+            </Heading>
+
             <ControlGroup label="Input Name:" required>
                 <Text
                     value={name}
@@ -245,6 +269,7 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
                     canClear
                 />
             </ControlGroup>
+
             <ControlGroup label="API URL:" required>
                 <Text
                     value={url}
@@ -261,6 +286,7 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
                     {props.loading ? <WaitSpinner size="medium" /> : "Fetch"}
                 </Button>
             </ControlGroup>
+
             <ControlGroup label="HTTP Headers" tooltip="Add one or more HTTP headers in the format 'Header: Value'">
                 <FormRows
                     onRequestAdd={handleNewHttpHeader}
@@ -270,6 +296,11 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
                 </FormRows>
             </ControlGroup>
 
+            {/* Splunk Configuration Section */}
+            <Heading level={2} style={{ marginTop: '32px', marginBottom: '20px', paddingBottom: '10px', borderBottom: '2px solid #e0e0e0' }}>
+                Splunk Configuration
+            </Heading>
+
             <ControlGroup label="Cron Expression:" required tooltip="Cron expression for scheduling data input">
                 <Text
                     value={cronExpression}
@@ -278,6 +309,52 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
                     required
                 />
             </ControlGroup>
+
+            <ControlGroup label="Select KVStore Collection:" required>
+                <Select
+                    value={selected_output_location}
+                    onChange={(_, { value }) => {
+                        updateConfigField('selected_output_location', String(value));
+                        setSelectedCollection(String(value));
+                    }}
+                    filter
+                    placeholder="Select a collection..."
+                    style={{ flex: 1, minWidth: '400px' }}
+                >
+                    {collectionNames.map((collection: KVStoreCollection) => (
+                        <Select.Option
+                            value={generateSelectedOutputString(collection.app, collection.name)}
+                            key={collection.name}
+                            label={`${collection.name} (${collection.app})`}
+                        />
+                    ))}
+                </Select>
+                <Button appearance="secondary" onClick={() => setShowCreateCollectionModal(true)} elementRef={modalToggle}>
+                    Create New Collection
+                </Button>
+            </ControlGroup>
+            <NewKVStoreForm
+                open={showCreateCollectionModal}
+                onClose={() => setShowCreateCollectionModal(false)}
+                onCreate={handleOnCreateCollection}
+                modalToggle={modalToggle}
+                initialFields={props.fieldsForKvStoreCreation}
+            />
+
+            <ControlGroup label="Mode:" required tooltip="Overwrite will replace all existing data in the collection">
+                <RadioList value={mode} onChange={(_, { value }) => {
+                    updateConfigField('mode', value as DataInputMode);
+                    setMode(value as DataInputMode)
+                }}>
+                    <RadioList.Option value="overwrite">Overwrite</RadioList.Option>
+                </RadioList>
+            </ControlGroup>
+
+            {/* Data Processing Section */}
+            <Heading level={2} style={{ marginTop: '32px', marginBottom: '20px', paddingBottom: '10px', borderBottom: '2px solid #e0e0e0' }}>
+                Data Processing
+            </Heading>
+
             <ControlGroup label="Exclude JSONPaths" tooltip="Provide one or more JSONPath expressions to exclude fields from the JSON.">
                 <FormRows
                     onRequestAdd={handleNewJsonPathExclusion}
@@ -318,52 +395,6 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
                 modalToggle={previewModalToggle}
             />
 
-            <ControlGroup label="Select KV Store Collection:" required>
-                <Select
-                    value={selected_output_location}
-                    onChange={(_, { value }) => {updateConfigField('selected_output_location', String(value)); setSelectedCollection(String(value))}}
-                    filter
-                    placeholder="Filter collections..."
-                    style={{ flex: 1, minWidth: '400px' }}
-                >
-                    {collectionNames.map((collection) => (
-                        <Select.Option value={`${collection.app}/${collection.name}`} key={`${collection.name} (${collection.app})`} label={`${collection.name} (${collection.app})`} />
-                    ))}
-                </Select>
-                <Button appearance="secondary" onClick={() => setShowCreateKVModal(true)} elementRef={modalToggle}>
-                    Create New KV Store
-                </Button>
-            </ControlGroup>
-            <NewKVStoreForm
-                open={showCreateKVModal}
-                onClose={() => setShowCreateKVModal(false)}
-                initialFields={props.fieldsForKvStoreCreation}
-                onCreate={async (name, app, fields) => {
-                    try {
-                        await createNewKVStoreCollection(name, app, fields);
-                        // Refresh collections and select the new one
-                        const result = await getAllCollectionNames();
-                        setCollectionNames(result);
-                        setSelectedCollection(generateSelectedOutputString(app, name));
-                        setShowCreateKVModal(false);
-                    }
-                    catch (err) {
-                        props.setError(`Failed to create KV Store collection: ${err instanceof Error ? err.message : 'Unknown error'}`);
-                        return;
-                    }
-
-                }}
-                modalToggle={modalToggle} />
-            <ControlGroup label="Mode:" tooltip="How would you like to manage the existing data in the collection?" required>
-
-                <RadioList value={mode} onChange={(_, { value }) => {
-                    setMode(value as DataInputMode);
-                    updateConfigField('mode', value as DataInputMode);
-                }}>
-                    <RadioList.Option value={"overwrite"}>overwrite</RadioList.Option>
-                </RadioList>
-
-            </ControlGroup>
             <br />
             {/* assume if dataInputAppConfig is passed in save logic is being handled else where (edit mode) */}
             {!props.dataInputAppConfig && (
