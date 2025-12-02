@@ -71,7 +71,11 @@ const ArrayFieldSelector: React.FC<ArrayFieldSelectorProps> = ({
     };
 
     if (!data) {
-        return null;
+        return (
+            <Container>
+                <NoArraysMessage>Generate a preview to populate array options</NoArraysMessage>
+            </Container>
+        );
     }
 
     if (detectedArrays.length === 0) {
