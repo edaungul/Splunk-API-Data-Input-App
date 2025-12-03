@@ -1,19 +1,19 @@
-import ControlGroup from '@splunk/react-ui/ControlGroup';
-import React, { useState } from 'react';
-import Text from '@splunk/react-ui/Text';
-import type { DataInputAppConfig, DataInputMode } from './DataInputs.types';
-import Select from '@splunk/react-ui/Select';
-import Button from '@splunk/react-ui/Button';
-import WaitSpinner from '@splunk/react-ui/WaitSpinner';
-import FormRows from '@splunk/react-ui/FormRows';
-import { getAllCollectionNames, type KVStoreCollection } from '../../utils/splunk';
-import NewKVStoreForm from '../DataInputs/KVStore/NewKVStoreForm';
-import { generateSelectedOutputString } from '../../utils/dataInputUtils';
-import RadioList from '@splunk/react-ui/RadioList';
 import TrashCanCross from '@splunk/react-icons/TrashCanCross';
+import Button from '@splunk/react-ui/Button';
+import ControlGroup from '@splunk/react-ui/ControlGroup';
+import FormRows from '@splunk/react-ui/FormRows';
+import Heading from '@splunk/react-ui/Heading';
+import RadioList from '@splunk/react-ui/RadioList';
+import Select from '@splunk/react-ui/Select';
+import Text from '@splunk/react-ui/Text';
+import WaitSpinner from '@splunk/react-ui/WaitSpinner';
+import React, { useState } from 'react';
+import { generateSelectedOutputString } from '../../utils/dataInputUtils';
+import { createNewKVStoreCollection, getAllCollectionNames, type KVStoreCollection } from '../../utils/splunk';
+import NewKVStoreForm from '../DataInputs/KVStore/NewKVStoreForm';
 import ArrayFieldSelector from '../Json/ArrayFieldSelector';
 import EventPreviewModal from '../Json/EventPreviewModal';
-import Heading from '@splunk/react-ui/Heading';
+import type { DataInputAppConfig, DataInputMode } from './DataInputs.types';
 
 
 interface KVStoreDataFormProps {
@@ -148,7 +148,7 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
             <div style={{ display: 'flex'}}>
                 <div style={{ flexGrow: 1, marginRight: '8px', minWidth: 0 }}>
                     <Text
-                        style={{ width: '100%', minWidth: i === 0 ? '577px' : '542px', fontSize: '1.1em' }}
+                        style={{ width: '100%', fontSize: '1.1em' }}
                         placeholder="e.g. $.bar[*].baz"
                         value={value}
                         onChange={(_, { value }) => handleJsonPathTextChange(value, { index: i })}
@@ -196,7 +196,7 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ flexGrow: 1, marginRight: '8px', minWidth: 0 }}>
                     <Text
-                        style={{ width: '100%', minWidth: i === 0 ? '577px' : '542px', fontSize: '1.1em' }}
+                        style={{ width: '100%', fontSize: '1.1em' }}
                         placeholder="Header: Value"
                         value={value}
                         onChange={(_, { value }) => handleHttpHeaderTextChange(value, { index: i })}
@@ -217,22 +217,29 @@ const KVStoreDataForm: React.FC<KVStoreDataFormProps> = (props) => {
 
     // Collect JSONPath values from all Text fields in rows
     const getPaths = () => jsonPathValues.filter(Boolean);
-    const handleOnCreateCollection = async (createdCollectionName: string, appName: string) => {
-        // Optimistically add the new collection to the list immediately
-        setCollectionNames(prev => {
-            const newCollection = { name: createdCollectionName, app: appName };
-            const exists = prev.some(c => c.name === createdCollectionName && c.app === appName);
-            if (exists) return prev;
-            return [...prev, newCollection].sort((a, b) => a.name.localeCompare(b.name));
-        });
-        const selectedOutput = generateSelectedOutputString(appName, createdCollectionName);
-        setSelectedCollection(selectedOutput);
-        updateConfigField('selected_output_location', selectedOutput);
+    const handleOnCreateCollection = async (createdCollectionName: string, appName: string, fields: string[]) => {
+        try {
+            // Create the KVStore collection on the backend
+            await createNewKVStoreCollection(createdCollectionName, appName, fields);
+            
+            // Optimistically add the new collection to the list immediately
+            setCollectionNames(prev => {
+                const newCollection = { name: createdCollectionName, app: appName };
+                const exists = prev.some(c => c.name === createdCollectionName && c.app === appName);
+                if (exists) return prev;
+                return [...prev, newCollection].sort((a, b) => a.name.localeCompare(b.name));
+            });
+            const selectedOutput = generateSelectedOutputString(appName, createdCollectionName);
+            setSelectedCollection(selectedOutput);
+            updateConfigField('selected_output_location', selectedOutput);
 
-        // Refresh the list from the server in the background
-        getAllCollectionNames().then(names => {
-            setCollectionNames(names);
-        });
+            // Refresh the list from the server in the background
+            getAllCollectionNames().then(names => {
+                setCollectionNames(names);
+            });
+        } catch (error) {
+            props.setError(error instanceof Error ? error.message : 'Failed to create KV Store collection');
+        }
     };
 
     // Function to clear all input fields

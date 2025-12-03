@@ -1,17 +1,17 @@
-import ControlGroup from '@splunk/react-ui/ControlGroup';
-import React, { useState } from 'react';
-import Text from '@splunk/react-ui/Text';
-import type { DataInputAppConfig, DataInputMode } from './DataInputs.types';
-import Select from '@splunk/react-ui/Select';
+import TrashCanCross from '@splunk/react-icons/TrashCanCross';
 import Button from '@splunk/react-ui/Button';
-import WaitSpinner from '@splunk/react-ui/WaitSpinner';
+import ControlGroup from '@splunk/react-ui/ControlGroup';
 import FormRows from '@splunk/react-ui/FormRows';
+import Heading from '@splunk/react-ui/Heading';
+import Select from '@splunk/react-ui/Select';
+import Text from '@splunk/react-ui/Text';
+import WaitSpinner from '@splunk/react-ui/WaitSpinner';
+import React, { useState } from 'react';
 import { getAllIndexNames } from '../../utils/splunk';
 import CreateNewIndex from '../DataInputs/Index/CreateNewIndex';
-import TrashCanCross from '@splunk/react-icons/TrashCanCross';
 import ArrayFieldSelector from '../Json/ArrayFieldSelector';
 import EventPreviewModal from '../Json/EventPreviewModal';
-import Heading from '@splunk/react-ui/Heading';
+import type { DataInputAppConfig, DataInputMode } from './DataInputs.types';
 
 
 interface IndexDataFormProps {
@@ -144,7 +144,7 @@ const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
             <div style={{ display: 'flex'}}>
                 <div style={{ flexGrow: 1, marginRight: '8px', minWidth: 0 }}>
                     <Text
-                        style={{ width: '100%', minWidth: i === 0 ? '577px' : '542px', fontSize: '1.1em' }}
+                        style={{ width: '100%', fontSize: '1.1em' }}
                         placeholder="e.g. $.bar[*].baz"
                         value={value}
                         onChange={(_, { value }) => handleJsonPathTextChange(value, { index: i })}
@@ -192,7 +192,7 @@ const IndexDataForm: React.FC<IndexDataFormProps> = (props) => {
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ flexGrow: 1, marginRight: '8px', minWidth: 0 }}>
                     <Text
-                        style={{ width: '100%', minWidth: i === 0 ? '577px' : '542px', fontSize: '1.1em' }}
+                        style={{ width: '100%', fontSize: '1.1em' }}
                         placeholder="Header: Value"
                         value={value}
                         onChange={(_, { value }) => handleHttpHeaderTextChange(value, { index: i })}
